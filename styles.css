@@ -1,0 +1,1925 @@
+/* MAIN BODY STYLE */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Arial';
+    font-style: normal;
+    color: #000;
+}
+
+h3 {
+    color: #000;
+}
+
+a:link,
+a:visited {
+    color: #de2d26;
+    text-decoration: none;
+}
+
+a:hover,
+a:active {
+    color: #fcae91;
+    text-decoration: none;
+}
+
+/* MAPBOX STYLE */
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+/* ATLAS TITLE — live HTML/CSS wordmark (Option A: outlined refresh) */
+.css-atlas-title {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    pointer-events: none;
+    width: 92%;
+    max-width: 640px;
+    text-align: center;
+}
+
+.css-atlas-title .atlas-word {
+    margin: 0;
+    /* RBD outline font — same family used by the county popup's state
+       name (.atlas-report-state). The "Outlined" glyphs are hollow by
+       design, so we fill them solid dark and let the font supply the
+       outline. NOTE: RBDBoldOutlined is NOT embedded in this project;
+       it only renders on machines that have it installed locally.
+       Everyone else falls back to Arial Black (solid, no outline).
+       To make the outline render for all visitors, embed the font via
+       @font-face (see note in the popup styles). */
+    font-family: 'RBDBoldOutlined', 'Arial Black', 'Arial Bold', Gadget, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    /* keep the wordmark on a single line; size scales down on narrow screens */
+    white-space: nowrap;
+    font-size: clamp(18px, 4vw, 40px);
+    line-height: 0.92;
+    letter-spacing: 0.01em;
+    color: #1a1a1a;
+    /* RBDBoldOutlined is a single-weight font, so font-weight has no
+       visible effect — thicken the glyph edges with a stroke instead
+       to make the wordmark read heavier. Bump the px value for bolder. */
+    -webkit-text-stroke: 1.3px #1a1a1a;
+    text-stroke: 1.3px #1a1a1a;
+}
+
+.css-atlas-title .atlas-sub {
+    display: inline-block;
+    margin-top: 8px;
+    background: #de2d26;
+    color: #fff;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-weight: 600;
+    font-size: clamp(8.5px, 1.45vw, 12.5px);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.25;
+    padding: 5px 12px;
+    border-radius: 3px;
+}
+
+/* DATA LENS LEGEND — body content swaps based on active lens */
+#legend {
+    position: absolute;
+    bottom: 30px;
+    left: 10px;
+    text-align: left;
+    z-index: 999;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    border-radius: 0px;
+    font-size: 13px;
+    font-family: 'Arial';
+    font-weight: 100;
+    font-style: normal;
+    width: 220px;
+}
+
+.legend-title {
+    margin-bottom: 4px;
+}
+
+/* SVI lens resolution indicator — a zoom-aware line above the legend
+   title telling the user whether they're viewing the county average or
+   census tracts, plus an orange nudge to zoom in for tract detail.
+   Populated by renderSviScope() in scripts.js. */
+.svi-scope-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: bold;
+    color: #00695f;
+    margin-bottom: 6px;
+}
+.svi-scope-line:empty {
+    display: none;
+}
+.svi-scope-line .res-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #00B7A6;
+    flex: none;
+}
+.svi-scope-line .res-line-muted {
+    font-weight: normal;
+    color: #777;
+}
+.svi-scope-hint {
+    font-size: 10.5px;
+    color: #8a6a00;
+    margin-top: 7px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #fdf3d0;
+    border-left: 3px solid #F4C842;
+    padding: 4px 7px;
+}
+.svi-scope-hint:empty {
+    display: none;
+}
+
+/* Sub-mode subtitle under a lens title (e.g. "Average outage" /
+   "Worst-case outage" beneath "Energy Reliability"). */
+.legend-mode-name {
+    font-size: 12px;
+    color: #555;
+    font-weight: normal;
+}
+
+/* Filter badge — appended to the legend when an Urban/Rural filter
+   is active so the user always knows which subset they're seeing. */
+.legend-filter-badge {
+    margin-top: 8px;
+    padding: 4px 8px;
+    border-left: 3px solid #888;
+    background: #f4f4f4;
+    font-size: 11px;
+    font-weight: bold;
+    color: #333;
+}
+.legend-filter-badge.filter-rural {
+    border-left-color: #F4C842;  /* warm yellow — matches popup tag */
+    background: #fdf3d0;
+}
+.legend-filter-badge.filter-urban {
+    border-left-color: #FF6B35;  /* coral-orange — matches popup tag */
+    background: #ffe2d4;
+}
+
+
+/* HOVER TOOLTIP — lightweight popup that follows the cursor.
+   Compact, no tab arrow, no close button. Shows county name + the
+   active lens's value so the user can scan the map at a glance. */
+.aoa-hover-popup .mapboxgl-popup-content {
+    padding: 8px 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    line-height: 1.3;
+    color: #000;
+    pointer-events: none;
+    max-height: none;
+    overflow: visible;
+}
+.aoa-hover-popup .mapboxgl-popup-tip {
+    display: none;
+}
+.aoa-hover-popup .hover-county {
+    font-weight: bold;
+    font-size: 13px;
+    color: #000;
+}
+/* The headline value carries the ACTIVE LENS's color so the tooltip
+   reads in the same palette as the map + legend it sits on (e.g. teal
+   under Social Vulnerability, magenta under Communities of Color). The
+   per-lens classes below override the neutral default. Keep these hexes
+   in sync with the disaster-count headline tints (.disaster-count.lens-*)
+   and the legend color-bar anchors. */
+.aoa-hover-popup .hover-summary {
+    color: #333;
+    font-weight: bold;
+    margin-top: 2px;
+}
+.aoa-hover-popup .hover-summary.lens-disaster { color: #de2d26; }
+.aoa-hover-popup .hover-summary.lens-fema     { color: #c96305; }
+.aoa-hover-popup .hover-summary.lens-svi      { color: #007462; }
+.aoa-hover-popup .hover-summary.lens-energy   { color: #c24400; }
+.aoa-hover-popup .hover-summary.lens-older    { color: #005824; }
+.aoa-hover-popup .hover-summary.lens-urban    { color: #4a1486; }
+.aoa-hover-popup .hover-summary.lens-rural    { color: #084594; }
+.aoa-hover-popup .hover-summary.lens-minority { color: #7a0177; }
+
+/* Muted secondary context line (e.g. "Urban county · pop. 58,761",
+   the older-adult share, or the parent county under a tract). Replaces
+   the old all-caps .hover-class tag, which used to stamp URBAN/RURAL on
+   every tooltip regardless of the active lens. */
+.aoa-hover-popup .hover-sub {
+    color: #555;
+    font-size: 11px;
+    margin-top: 2px;
+}
+/* Communities of Color lens — race breakdown rows inside the hover
+   tooltip, so the full detail is readable without opening the popup or
+   dropping to the tract layer. */
+.aoa-hover-popup .hover-race {
+    margin-top: 5px;
+    padding-top: 4px;
+    border-top: 1px solid #eee;
+}
+.aoa-hover-popup .hover-race-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    font-size: 11px;
+    line-height: 1.55;
+    color: #444;
+}
+.aoa-hover-popup .hover-race-row span:last-child {
+    font-weight: bold;
+    color: #7a0177;
+}
+
+
+/* INDICATORS TABLE — sits inside the click popup's County Data tab.
+   Surfaces all 4 lens metrics so a journalist can fact-check across
+   dimensions in one glance. The row whose key matches the active lens
+   gets a yellow highlight so the "current view" stays visible.       */
+.indicators-block {
+    margin-top: 8px;
+}
+.indicators-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    line-height: 1.35;
+}
+.indicators-table td {
+    padding: 3px 6px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Generic label / value cell styling — shared by both the Indicators
+   table and the State Stats table so the visual language matches.
+   Bold values, regular labels (consistent with the popup's headline
+   "4 Federally Declared Extreme Weather Disasters" callout where the
+   number is bold and the description is regular weight). */
+.indicator-label {
+    color: #555;
+    width: 65%;
+    font-weight: normal;
+}
+.indicator-value {
+    text-align: right;
+    font-weight: bold;
+    color: #000;
+    white-space: nowrap;
+}
+
+/* Section subheader inside the indicators table — names the data
+   source for each group (Atlas of Accountability / CDC SVI / U.S.
+   Energy Reliability). Bold black + 2px underline so it visually
+   matches the county name h3 — readers see them as section anchors,
+   not faint captions. Reserved black so red can stay reserved for
+   the disaster-count headline + active lens highlights. */
+.indicators-table tr.indicator-subheader td {
+    padding: 10px 4px 4px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #000;
+    border-bottom: 2px solid #000;
+    background: transparent;
+}
+/* The very first subheader doesn't need a big top gap (the
+   disaster-count block above already provides spacing). */
+.indicators-table tr.indicator-subheader:first-child td {
+    padding-top: 6px;
+}
+
+/* Methodology / explainer caption that sits under a subheader. Uses
+   a smaller font and lighter color so it reads as a footnote, not a
+   competing row. <i> tags inside the caption italicize key terms. */
+.indicators-table tr.indicator-caption td {
+    padding: 4px 6px 8px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #666;
+    border-bottom: 1px solid #eee;
+}
+
+/* County → tract comparison pair at the top of the tract SVI section.
+   Both rows live in the SVI teal palette; intensity sets the hierarchy.
+   County = lighter context tint, tract = stronger focus tint + accent
+   stripe (mirrors the active-row stripe used elsewhere). */
+.indicators-table tr.indicator-compare td {
+    border-bottom: 1px solid #eee;
+}
+.indicators-table tr.compare-county td {
+    background: #E3F6F2;
+}
+.indicators-table tr.compare-county .indicator-label,
+.indicators-table tr.compare-county .indicator-value {
+    color: #2b6a62;
+}
+.indicators-table tr.compare-tract {
+    box-shadow: inset 3px 0 0 #00B7A6;
+}
+.indicators-table tr.compare-tract td {
+    background: #C6F2ED;
+}
+.indicators-table tr.compare-tract .indicator-label,
+.indicators-table tr.compare-tract .indicator-value {
+    color: #00463c;
+    font-weight: bold;
+}
+
+/* "Zoom in for census-tract detail" nudge in the county popup's SVI
+   section — mirrors the legend's orange hint and is clickable (flies the
+   map to tract zoom). Spans both table columns. */
+.indicators-table tr.svi-zoom-hint-row td {
+    padding: 8px 6px 4px;
+    border-bottom: 1px solid #eee;
+}
+.svi-zoom-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    font-size: 11px;
+    color: #8a6a00;
+    background: #fdf3d0;
+    border: none;
+    border-left: 3px solid #F4C842;
+    padding: 6px 8px;
+    cursor: pointer;
+}
+.svi-zoom-hint:hover {
+    background: #fbeab0;
+}
+.svi-zoom-hint-arrow {
+    margin-left: auto;
+    font-weight: bold;
+}
+
+/* Collapsible section header inside the indicators table (e.g. the tract
+   popup's "Theme breakdown" and "Race & ethnicity"). Click to expand the
+   rows tagged group-<id>. Reads as a tappable row in the SVI teal family:
+   caret + label, with an optional count/teaser on the right. */
+.indicators-table tr.indicator-collapsible {
+    cursor: pointer;
+}
+.indicators-table tr.indicator-collapsible td {
+    padding: 7px 6px;
+    border-bottom: 1px solid #d7efe9;
+    background: #EAF8F5;
+}
+.indicators-table tr.indicator-collapsible:hover td {
+    background: #D4F1EB;
+}
+.indicators-table tr.indicator-collapsible .indicator-label {
+    font-weight: bold;
+    color: #00574c;
+}
+.indicators-table tr.indicator-collapsible .caret {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 9px;
+    color: #00B7A6;
+    transition: transform 0.15s ease;
+    transform: translateY(-1px);
+}
+.indicators-table tr.indicator-collapsible[aria-expanded="true"] .caret {
+    transform: translateY(-1px) rotate(90deg);
+}
+.collapsible-count,
+.collapsible-teaser {
+    font-weight: normal;
+    color: #4a8c82;
+    font-size: 11px;
+}
+
+/* Rows belonging to a collapsible group: hidden until .is-open is added
+   by the toggle handler. When open they read as nested detail — a faint
+   teal tint + left indent so they clearly belong to the header above. */
+.indicators-table tr.indicator-grouped {
+    display: none;
+}
+.indicators-table tr.indicator-grouped.is-open {
+    display: table-row;
+}
+.indicators-table tr.indicator-grouped td {
+    background: #F4FBFA;
+}
+.indicators-table tr.indicator-grouped .indicator-label {
+    padding-left: 18px;
+}
+.indicators-table tr.indicator-grouped.indicator-caption td {
+    padding-left: 18px;
+    color: #4a8c82;
+}
+
+/* Communities of Color county section. The COC block appears at the bottom
+   of every county popup, so by default its collapsible header + nested rows
+   are NEUTRAL grey (overriding the generic teal collapsible style above).
+   They only take on the pink lens family when the Communities of Color lens
+   is the active lens — keyed off the `lens-minority` class on the table. */
+.indicators-table tr.indicator-collapsible.collapsible-coc td {
+    background: #f4f4f4;
+    border-bottom-color: #e6e6e6;
+}
+.indicators-table tr.indicator-collapsible.collapsible-coc:hover td {
+    background: #ececec;
+}
+.indicators-table tr.indicator-collapsible.collapsible-coc .indicator-label {
+    color: #444;
+}
+.indicators-table tr.indicator-collapsible.collapsible-coc .caret {
+    color: #888;
+}
+.indicators-table tr.indicator-grouped.group-countyrace td {
+    background: #fafafa;
+}
+
+/* Active state — Communities of Color lens selected → pink family. */
+.indicators-table.lens-minority tr.indicator-collapsible.collapsible-coc td {
+    background: #fff3f9;
+    border-bottom-color: #ffb8db;
+}
+.indicators-table.lens-minority tr.indicator-collapsible.collapsible-coc:hover td {
+    background: #ffe9f3;
+}
+.indicators-table.lens-minority tr.indicator-collapsible.collapsible-coc .indicator-label {
+    color: #7a0177;
+}
+.indicators-table.lens-minority tr.indicator-collapsible.collapsible-coc .caret {
+    color: #ae017e;
+}
+.indicators-table.lens-minority tr.indicator-grouped.group-countyrace td {
+    background: #fff3f9;
+}
+
+/* ── Federal disaster aid: county hero block ──
+   The headline county FEMA number, shown big + abbreviated. Neutral by
+   default; tints orange when the FEMA Disaster Funding lens is active
+   (table carries .lens-fema), matching that lens's family. */
+.indicators-table tr.fema-hero-row td {
+    padding: 3px 0 5px;
+    border-bottom: 0;
+}
+.fema-hero {
+    background: #f5f5f3;
+    border-left: 4px solid #999;
+    padding: 6px 10px;
+}
+.fema-hero .hero-amount {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #222;
+}
+.fema-hero .hero-sub {
+    font-size: 10px;
+    color: #555;
+    margin-top: 2px;
+}
+.indicators-table.lens-fema .fema-hero {
+    background: #FDE0C8;
+    border-left-color: #ED7A1F;
+}
+.indicators-table.lens-fema .fema-hero .hero-amount {
+    color: #9A4B02;
+}
+
+/* Statewide funding collapsible: neutral by default, orange under the FEMA
+   lens (same neutral→lens-color pattern as the Communities of Color block). */
+.indicators-table tr.indicator-collapsible.collapsible-fema td {
+    background: #f4f4f4;
+    border-bottom-color: #e6e6e6;
+}
+.indicators-table tr.indicator-collapsible.collapsible-fema:hover td {
+    background: #ececec;
+}
+.indicators-table tr.indicator-collapsible.collapsible-fema .indicator-label {
+    color: #444;
+}
+.indicators-table tr.indicator-collapsible.collapsible-fema .caret {
+    color: #888;
+}
+.indicators-table tr.indicator-grouped.group-statefunding td {
+    background: #fafafa;
+}
+/* Statewide total teaser ($) in bold black — neutral so it reads as a
+   plain figure rather than an alert, bolded so the dollar amount stands
+   out. Scoped to funding so the COC % POC teaser is unaffected. */
+.indicators-table tr.indicator-collapsible.collapsible-fema .collapsible-teaser {
+    color: #000;
+    font-weight: bold;
+}
+.indicators-table.lens-fema tr.indicator-collapsible.collapsible-fema td {
+    background: #FDE0C8;
+    border-bottom-color: #f6cba6;
+}
+.indicators-table.lens-fema tr.indicator-collapsible.collapsible-fema:hover td {
+    background: #f9d3b3;
+}
+.indicators-table.lens-fema tr.indicator-collapsible.collapsible-fema .indicator-label {
+    color: #9A4B02;
+}
+.indicators-table.lens-fema tr.indicator-collapsible.collapsible-fema .caret {
+    color: #C96305;
+}
+.indicators-table.lens-fema tr.indicator-grouped.group-statefunding td {
+    background: #fff6ee;
+}
+
+/* Footnotes rendered BELOW the indicators table — methodology caveats
+   that explain marked terms (e.g. *NRI threshold). Small, italic, gray. */
+.indicators-footnotes {
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #666;
+    font-style: italic;
+}
+.indicators-footnotes div {
+    margin-top: 3px;
+}
+.indicators-table tr.indicator-active .indicator-label,
+.indicators-table tr.indicator-active .indicator-value {
+    color: #000;
+}
+
+/* Per-lens highlight colors — uses the lightest stop of each lens's
+   ramp for the row background and a deeper mid-ramp tone for the
+   left stripe accent. Keeps visual continuity with the map legend. */
+.indicators-table tr.indicator-active.lens-fema {
+    background: #FDE0C8;
+    box-shadow: inset 3px 0 0 #ED7A1F;
+}
+.indicators-table tr.indicator-active.lens-svi {
+    background: #C6F2ED;
+    box-shadow: inset 3px 0 0 #00B7A6;
+}
+.indicators-table tr.indicator-active.lens-energy {
+    background: #F9ECDC;
+    box-shadow: inset 3px 0 0 #C24400;
+}
+.indicators-table tr.indicator-active.lens-older {
+    background: #edf8fb;
+    box-shadow: inset 3px 0 0 #005824;
+}
+.indicators-table tr.indicator-active.lens-minority {
+    background: #fff3f9;
+    box-shadow: inset 3px 0 0 #7a0177;
+}
+
+.color-bar {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+/* Per-lens gradients — keep these aligned with paintExpression in scripts.js. */
+.color-bar.lens-disaster {
+    background: linear-gradient(to right, #e6e6e5, #fee5d9, #fcae91, #fb6a4a, #de2d26, #a50f15, #710005);
+}
+.color-bar.lens-fema {
+    background: linear-gradient(to right, #FDE0C8, #F9BE88, #F59A45, #ED7A1F, #C96305, #9A4B02);
+}
+.color-bar.lens-svi {
+    background: linear-gradient(to right, #C6F2ED, #79D9CF, #00B7A6, #009887, #007462);
+}
+.color-bar.lens-energy {
+    background: linear-gradient(to right, #F9ECDC, #F4C69A, #F07F2E, #C24400, #6E2800);
+}
+.color-bar.lens-older {
+    background: linear-gradient(to right, #edf8fb, #b2e2e2, #66c2a4, #2ca25f, #006d2c);
+}
+/* Older Adults > "Older adults & disaster declarations" — smooth
+   7-stop green spectrum, matching the FEMA Disaster Declarations
+   lens visual style (0/2/4/6/8/10/12+). Painted only on counties
+   with 25%+ age 60+; everywhere else is muted gray. */
+.color-bar.lens-older-disasters {
+    background: linear-gradient(to right, #edf8fb, #ccece6, #99d8c9, #66c2a4, #41ae76, #238b45, #005824);
+}
+/* Urban Counties & Disaster Declarations — smooth 7-stop purple
+   spectrum, matching the FEMA Disaster Declarations lens visual
+   style. Civic/government coding, intentionally non-political. */
+.color-bar.lens-urban {
+    background: linear-gradient(to right, #efedf5, #dadaeb, #bcbddc, #9e9ac8, #807dba, #6a51a3, #4a1486);
+}
+/* Rural Counties — smooth 7-stop blue spectrum, matching the FEMA
+   Disaster Declarations lens visual style. Distinct from Social
+   Vulnerability (which leans teal/green-blue). */
+.color-bar.lens-rural {
+    background: linear-gradient(to right, #eff3ff, #c6dbef, #9ecae1, #6baed6, #4292c6, #2171b5, #084594);
+}
+/* Communities of Color — smooth 7-stop magenta/pink spectrum, matching
+   the FEMA Disaster Declarations lens visual style. Painted only on
+   majority-minority counties (50%+ people of color); everywhere else is
+   muted gray. Distinct from urban (purple), rural (blue), older (green). */
+.color-bar.lens-minority {
+    background: linear-gradient(to right, #fde0dd, #fcc5c0, #fa9fb5, #f768a1, #dd3497, #ae017e, #7a0177);
+}
+
+/* Proportional-dots legend for the Older Adults > "Where older adults
+   live" sub-mode. Each .legend-dot is sized inline (data-driven) to
+   match the radii produced by the map's sqrt scale at 10K / 100K /
+   500K / 1M+ adults 60+. */
+.dot-scale-legend {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-top: 10px;
+    padding: 4px 4px 0;
+}
+.dot-scale-legend .dot-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.dot-scale-legend .legend-dot {
+    display: inline-block;
+    background: #006d2c;
+    opacity: 0.6;
+    border-radius: 50%;
+    border: 0.6px solid #ffffff;
+    box-shadow: 0 0 0 0.5px rgba(0,0,0,0.12);
+}
+.dot-scale-legend .dot-label {
+    font-size: 10px;
+    color: #555;
+}
+
+
+/* Optional unit caption sitting below a lens gradient. */
+.legend-units {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #555;
+    font-style: italic;
+}
+
+/* "No data" swatch shown beside lenses that have a missing-value class
+   (e.g. SVI for Puerto Rico/DC/territories, Energy Reliability for the
+   142 counties without utility data). */
+.legend-no-data {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 12px;
+}
+.no-data-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 12px;
+    background: #C9C9C9;
+    border: 0.5px solid rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+.no-data-swatch.energy {
+    background: #C8CBD1;
+}
+
+.color-description {
+    position: absolute;
+    top: 5px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 10px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* DATA LENS + URBAN/RURAL CONTROL PANEL (bottom-right) */
+#control-panel {
+    position: absolute;
+    bottom: 30px;
+    right: 10px;
+    z-index: 999;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    font-family: 'Arial';
+    font-size: 13px;
+    color: #000;
+    width: 240px;
+    overflow: hidden;
+}
+
+.control-collapse-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-family: 'Arial';
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.control-collapse-toggle:hover {
+    background: #de2d26;
+}
+
+.control-collapse-glyph {
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.control-collapse-label {
+    flex: 1;
+    text-align: left;
+}
+
+.control-collapse-icon {
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.control-panel-body {
+    padding: 10px 12px 12px;
+}
+
+.control-panel-body.collapsed {
+    display: none;
+}
+
+.control-section + .control-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.control-title {
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #333;
+}
+
+/* Sub-grouping inside a control-section. Used to split the data
+   lens list into "Atlas Data" and "Communities & Disasters" groups
+   so the population overlay lenses read as a distinct family. */
+.control-subgroup-title {
+    font-weight: bold;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #555;
+    margin: 12px 0 6px 0;
+    padding-top: 8px;
+    border-top: 1px dashed #d8d8d8;
+}
+.control-subgroup-title:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.control-options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.control-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    cursor: pointer;
+    border-radius: 2px;
+    line-height: 1.2;
+}
+
+.control-option:hover {
+    background: #f5f5f5;
+}
+
+.control-option input[type="radio"] {
+    margin: 0;
+    cursor: pointer;
+    accent-color: #de2d26;
+}
+
+.control-option span {
+    user-select: none;
+}
+
+/* Lens-specific sub-controls (e.g. Energy AVG / MAX). Indented under
+   the parent radio with a left rule to make the relationship visible.
+   Visibility is controlled by JS — only shown when the parent lens
+   is active. */
+.control-suboptions {
+    margin: 4px 0 4px 22px;
+    padding-left: 8px;
+    border-left: 2px solid #d6d6d6;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.control-suboption {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px;
+    cursor: pointer;
+    border-radius: 2px;
+    line-height: 1.2;
+    font-size: 12px;
+    color: #333;
+}
+
+.control-suboption:hover {
+    background: #f5f5f5;
+}
+
+.control-suboption input[type="radio"] {
+    margin: 0;
+    cursor: pointer;
+    accent-color: #C24400; /* matches energy ramp accent */
+    transform: scale(0.9);
+}
+
+.control-suboption span {
+    user-select: none;
+}
+
+
+/* CONGRESS BOUNDARY LEGEND */
+.legend-item {
+    display: flex;
+    justify-content: flex-start;
+    /* Align items to the start */
+    align-items: center;
+    margin-top: 10px;
+}
+
+.legend-rectangle {
+    width: 40px;
+    height: 15px;
+    background-color: #fff;
+    border: 1px solid #000;
+    margin-right: 10px;
+}
+
+/* TOP LEFT HOW TO USE INFO BOX */
+#info-icon {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1001;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    line-height: 0;
+}
+#info-icon .fa-question-circle {
+    font-size: 25px;
+    color: #000;
+}
+#info-icon:hover {
+    opacity: 0.8;
+}
+#close-info-panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    line-height: 0;
+}
+#close-info-panel .fa-times {
+    font-size: 20px;
+    color: #000;
+}
+#info-icon:focus-visible,
+#close-info-panel:focus-visible {
+    outline: 2px solid #de2d26;
+    outline-offset: 2px;
+}
+
+/* Brand-red accent for the info-panel header. Replaces a deprecated
+   <font color> tag so the markup stays HTML5-clean and the color lives
+   in CSS where designers can adjust it. */
+.info-panel-title {
+    color: #de2d26;
+}
+
+/* Partner mailto link inside info-panel step 5. Styled as a soft red
+   pill so a foundation officer scanning the panel can spot the
+   conversion path without it competing with the body text. */
+.info-panel-partner-link {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 4px 10px;
+    background: #de2d26;
+    color: #fff !important;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    border-radius: 3px;
+}
+.info-panel-partner-link:hover { background: #000; }
+
+/* Methodology / data-sources caption at the bottom of the info panel.
+   Small, italic, links out to rebuildbydesign.org where the full
+   methodology is hosted. */
+.info-panel-meta {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    font-size: 11px;
+    color: #555;
+    font-style: italic;
+}
+.info-panel-meta a { color: #555; }
+.info-panel-meta a:hover { color: #de2d26; }
+
+#info-panel {
+    display: block;
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 0px;
+    max-width: 400px;
+    max-height: 800px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    font-family: 'Arial';
+    font-style: normal;
+    font-size: calc(10px + 0.2vw);
+    overflow-y: auto;
+}
+
+/* Wrapper for buttons */
+.button-wrapper {
+    display: flex;
+    justify-content: start; /* Align buttons to the left */
+    gap: 20px !important; /* Space between buttons */
+}
+
+/* SHARE AND DOWNLOAD BUTTON STYLING */
+.button-report {
+    font-family: "Open Sans", sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #000;
+    cursor: pointer;
+    border: 1px solid #000;
+    border-bottom: 2px solid #000;
+    border-right: 2px solid #000;
+    padding: 0.25em 0.5em;
+    background-color: #fff;
+    box-shadow: 1px 1px 0px 0px, 2px 2px 0px 0px, 3px 3px 0px 0px, 4px 4px 0px 0px, 5px 5px 0px 0px;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.button-report:hover {
+    background-color: #de2d26;
+    color: #fff;
+    box-shadow: 0px 0px 0px 0px, 1px 1px 0px 0px #000, 2px 2px 0px 0px #000, 3px 3px 0px 0px #000, 4px 4px 0px 0px #000, 5px 5px 0px 0px #000;
+    border: 1px solid #000;
+    border-bottom: 2px solid #000;
+    border-right: 2px solid #000;
+}
+
+.button-report:active {
+    box-shadow: 0px 0px 0px 0px;
+    top: 5px;
+    left: 5px;
+    background-color: #de2d26;
+    color: #fff;
+    font-weight: bold;
+    border: 1px solid #000;
+    border-bottom: 2px solid #000;
+    border-right: 2px solid #000;
+}
+
+
+
+/* INACTIVE FOR NOW Toggle DISASTER DATA 
+#toggle-counties {
+    font-family: 'Arial';
+    font-weight: 300;
+    font-style: normal;
+    font-size: 14px;
+    text-align: center;
+    color: #de2d26;
+}
+*/
+
+/* POP UP DESIGN */
+.popup-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    z-index: 9999;
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    font-size: 13px;
+    align-items: stretch;
+}
+
+/* County header — name + sub-line (population · classification badge). */
+.popup-county-header {
+    margin-bottom: 8px;
+}
+.popup-county-header h3 {
+    margin: 0 0 4px;
+    padding-bottom: 4px;
+    font-size: 16px;
+    border-bottom: 2px solid #000;
+    color: #000;
+}
+/* Small subtitle under the tract name (state) in the SVI tract popup,
+   matching the muted weight of the population text in the sub-line. */
+.popup-tract-state {
+    font-size: 0.85em;
+    color: #555;
+    margin: -2px 0 6px;
+    font-weight: 500;
+}
+.popup-county-sub {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #555;
+    flex-wrap: wrap;
+}
+.popup-pop {
+    font-weight: 500;
+    color: #333;
+    font-size: 13px;
+}
+
+/* Classification tag (Rural / Urban) — solid rectangle that anchors
+   the sub-line. Sits to the LEFT of the spelled-out population so the
+   eye reads classification → population. Purple stays as the single
+   semantic color for urban/rural classification anywhere in the popup. */
+.classification-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border: none;
+    border-radius: 0;
+    color: #fff;
+    line-height: 1.4;
+}
+.classification-badge.classification-rural {
+    background: #3182bd;  /* blue — matches Rural lens palette */
+    color: #fff;
+}
+.classification-badge.classification-urban {
+    background: #756bb1;  /* purple — matches Urban lens palette */
+    color: #fff;
+}
+
+/* State context — always visible (no collapse). Same label/value
+   styling as the indicators table for visual consistency. */
+.state-context {
+    margin: 10px 0;
+    padding: 10px 10px 6px;
+    background: #f7f7f7;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.state-context-title {
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+.state-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    line-height: 1.35;
+}
+.state-stats-table td {
+    padding: 4px 4px;
+    border-bottom: 1px solid #e8e8e8;
+}
+.state-stats-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Atlas of Disaster Report button — solid red CTA at the bottom of
+   the right column. Tight layout, white text, RBD outline font for
+   the state name. Acts as the natural "go read the report" anchor
+   after the user has reviewed the data and reps. */
+/* Lead-in sentence above the Atlas Report button. Selector is scoped
+   to .popup-col-rep so it overrides the generic `.popup-col-rep p`
+   rule (which sets 13px) and matches the left-column .indicator-label
+   look: 12px, regular weight, gray. padding-top guarantees breathing
+   room from the Governor section above even when the flex auto-margin
+   doesn't have leftover space to expand into. */
+.popup-col-rep .atlas-report-lead {
+    margin: auto 0 6px;
+    padding-top: 22px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #555;
+    font-style: italic;
+    font-weight: normal;
+}
+
+.atlas-report-button {
+    display: block;
+    margin-top: 0;
+    padding: 10px 8px;
+    background: #de2d26;
+    text-align: center;
+    text-decoration: none !important;
+    transition: background 0.15s;
+    border-radius: 2px;
+}
+.atlas-report-button:hover {
+    background: #000;
+}
+/* nowrap guarantees the "(2011–2024)" stays on one line in the
+   narrow right column. Font + letter-spacing tightened to fit. */
+.atlas-report-cta {
+    display: block;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #fff;
+    margin-bottom: 3px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.atlas-report-state {
+    display: block;
+    font-size: 22px;
+    line-height: 1;
+    color: #fff;
+    font-family: 'RBDBoldOutlined', 'Arial Black', 'Arial Bold', Gadget, sans-serif;
+    text-transform: uppercase;
+}
+
+/* Partner CTA shown directly under the state report button in the
+   popup's Representatives column. Black ground so it reads as a
+   *different* action from the red report button (research vs.
+   partnership) — same shape so they feel like a pair. */
+.partner-cta-button {
+    display: block;
+    margin-top: 6px;
+    padding: 10px 8px;
+    background: #111;
+    text-align: center;
+    text-decoration: none !important;
+    transition: background 0.15s;
+    border-radius: 2px;
+}
+.partner-cta-button:hover { background: #de2d26; }
+.partner-cta-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    letter-spacing: 0.2px;
+}
+.partner-cta-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: rgba(255,255,255,0.75);
+}
+
+/* Toast that replaces the native alert() on a failed geocoder lookup.
+   Positioned under the geocoder control (top-right) so the message
+   lands next to the input that triggered it. */
+.aoa-toast {
+    position: fixed;
+    top: 64px;
+    right: 12px;
+    max-width: 280px;
+    padding: 10px 14px;
+    background: rgba(20, 20, 20, 0.92);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.35;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1100;
+    animation: aoa-toast-in 180ms ease-out;
+}
+@keyframes aoa-toast-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Desktop: if the popup content is taller than the viewport, let it scroll
+   inside the popup instead of being clipped by the map container. */
+.mapboxgl-popup-content {
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+}
+
+.popup-column {
+    /* Default; overridden per-column below for the desktop 60/40 split. */
+    flex: 1 1 45%;
+}
+
+/* Desktop column ratio — left (county data + table) takes 60% of the
+   space available AFTER the gap, right (representatives) takes 40%.
+   Using flex-grow ratios with basis: 0 means we share the post-gap
+   space cleanly without overflow → no accidental wrapping.
+   Mobile stacks them at 100% (see media query). */
+.popup-col-disaster {
+    flex: 60 1 0;
+    min-width: 0;
+}
+.popup-col-rep {
+    flex: 40 1 0;
+    min-width: 0;
+    /* Stack right-column children vertically so margin-top: auto on
+       the atlas-report-lead can push it (and the button below it) to
+       the bottom — keeps the Atlas Report CTA anchored at the popup's
+       bottom-right corner regardless of how tall the left column gets. */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tab toggle — hidden on desktop, shown on mobile */
+.popup-tabs {
+    display: none;
+    width: 100%;
+    gap: 4px;
+    margin-bottom: 6px;
+    flex: 1 1 100%;
+}
+
+.popup-tab {
+    flex: 1 1 50%;
+    padding: 10px 8px;
+    background: #f0f0f0;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: 0;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.popup-tab.active {
+    background: #000;
+    color: #fff;
+}
+
+.popup-tab:hover:not(.active) {
+    background: #de2d26;
+    color: #fff;
+}
+
+.popup-column h3 {
+    border-bottom: 2px solid #000;
+    padding-bottom: 4px;
+    color: #000;
+    margin: 14px 0 8px;
+    font-size: 14px;
+}
+.popup-column h3:first-of-type {
+    margin-top: 6px;
+}
+
+.disaster-count {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 6px;
+    padding: 4px 6px;
+    border-radius: 2px;
+    transition: background 0.15s, box-shadow 0.15s;
+}
+
+.disaster-count .count {
+    font-size: 36px;
+    line-height: 1;
+    color: #de2d26;
+    font-family: 'RBDBoldOutlined', 'Arial Black', 'Arial Bold', Gadget, sans-serif;
+    flex-shrink: 0;
+}
+
+.disaster-count .count-description {
+    font-size: 12px;
+    line-height: 1.25;
+    color: #333;
+}
+
+/* Disaster lens active → highlight the disaster-count headline so
+   the user sees the active-lens cue here instead of in the table
+   (the table no longer carries a "Disaster declarations" row since
+   this block already shows it). */
+.disaster-count.lens-active.lens-disaster {
+    background: #fee5d9;
+    box-shadow: inset 3px 0 0 #de2d26;
+}
+/* Older Adults > "Disasters faced" tints the headline green because that
+   sub-mode's color ramp is also keyed off COUNTY_DISASTER_COUNT. */
+.disaster-count.lens-active.lens-older {
+    background: #edf8fb;
+    box-shadow: inset 3px 0 0 #005824;
+}
+/* Urban Counties & Disaster Declarations — purple tint on the headline. */
+.disaster-count.lens-active.lens-urban {
+    background: #efedf5;
+    box-shadow: inset 3px 0 0 #4a1486;
+}
+/* Rural Counties — blue tint on the headline. */
+.disaster-count.lens-active.lens-rural {
+    background: #eff3ff;
+    box-shadow: inset 3px 0 0 #084594;
+}
+/* Communities of Color — pink tint on the headline. */
+.disaster-count.lens-active.lens-minority {
+    background: #fff3f9;
+    box-shadow: inset 3px 0 0 #7a0177;
+}
+
+.namelsad {
+    font-weight: bold;
+    color: #fff;
+    background-color: #000;
+    padding: 3px 6px;
+    margin: 0 0 6px;
+    font-size: 12px;
+}
+
+/* Tighten the Congress Rep link line so it doesn't add a margin block. */
+.popup-col-rep p {
+    margin: 4px 0;
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+.table {
+    display: table;
+    width: 100%;
+}
+
+.table-row {
+    display: table-row;
+}
+
+.table-cell {
+    display: table-cell;
+    padding: 5px;
+}
+
+.table-cell.left {
+    font-weight: bold;
+}
+
+.atlas-cover {
+    width: 240px;
+    height: auto;
+    display: block;
+    margin-bottom: 8.4px;
+}
+
+.rep-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+/* Photo on the left, socials in a vertical column beside it.
+   Whole block sits at the left edge of the right column to match
+   the rest of the rep section's left-aligned text. */
+.rep-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 8px;
+}
+
+.social-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.social-links img {
+    width: 22px;
+    height: 22px;
+}
+
+.senator-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.senator-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.senator-image {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+
+/* MOBILE + TABLET (≤768PX) — BOTTOM-SHEET POPUP, TAB TOGGLE, COMPACT LEGEND */
+@media (max-width: 768px) {
+    /* Convert the Mapbox popup into a bottom sheet anchored to the viewport */
+    .mapboxgl-popup {
+        position: fixed !important;
+        top: auto !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        transform: none !important;
+        z-index: 1050 !important;  /* above legend + info panel */
+    }
+
+    .mapboxgl-popup-tip {
+        display: none !important;
+    }
+
+    .mapboxgl-popup-content {
+        max-height: 60vh;
+        overflow-y: auto;
+        border-radius: 12px 12px 0 0;
+        padding: 15px 15px 24px;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .mapboxgl-popup-close-button {
+        font-size: 28px;
+        padding: 4px 10px;
+        line-height: 1;
+        color: #000;
+        z-index: 10;
+    }
+
+    /* Keep the Representatives tab from extending under the close button. */
+    .popup-tabs {
+        padding-right: 40px;
+    }
+
+    /* Push the Mapbox top-right controls (geocoder + zoom) down so they
+       don't crowd the atlas title banner on mobile. */
+    .mapboxgl-ctrl-top-right {
+        top: 18px !important;
+    }
+
+    /* Make the geocoder input more prominent on mobile */
+    .mapboxgl-ctrl-geocoder {
+        min-width: 220px !important;
+        width: 220px !important;
+        font-size: 14px !important;
+    }
+
+    .mapboxgl-ctrl-geocoder--input {
+        height: 42px !important;
+        font-size: 14px !important;
+        padding: 6px 36px !important;
+    }
+
+    .mapboxgl-ctrl-geocoder--icon-search {
+        top: 11px !important;
+        left: 8px !important;
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    /* Show the tab toggle, hide columns except the active one */
+    .popup-tabs {
+        display: flex;
+    }
+
+    .popup-container {
+        gap: 6px;
+        max-width: 100%;
+    }
+
+    .popup-column {
+        display: none;
+        flex: 1 1 100%;
+    }
+
+    .popup-column.active {
+        display: block;
+    }
+
+    /* Mobile only: split each tab's body into two balanced columns so the
+       right-side whitespace is actually used. Title + disaster-count (county
+       tab) and district chip (rep tab) still span full width above the grid. */
+    .popup-subgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        align-items: start;
+        margin-top: 8px;
+    }
+
+    .popup-subcol {
+        min-width: 0; /* allow children to shrink inside grid cell */
+    }
+
+    /* Images inside a subcol must scale down to fit the narrower column. */
+    .popup-subcol .atlas-cover {
+        width: 100%;
+        max-width: 180px;
+    }
+
+    .popup-subcol .rep-image {
+        width: 100%;
+        max-width: 120px;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+    }
+
+    .popup-subcol .rep-info {
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .popup-subcol .social-links {
+        gap: 8px;
+    }
+
+    .popup-subcol .social-links img {
+        width: 22px;
+        height: 22px;
+    }
+
+    .popup-subcol .senator-image {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+    }
+
+    .popup-subcol .senator-row {
+        margin-bottom: 8px;
+    }
+
+    /* Compact legend so it doesn't crowd the bottom-sheet popup */
+    #legend {
+        width: auto;
+        max-width: 200px;
+        padding: 6px;
+        font-size: 10px;
+        bottom: 10px;
+    }
+
+    .color-bar {
+        height: 22px;
+    }
+
+    /* When a popup is open on mobile, hide only the legend + info panel
+       + control panel (they compete with the bottom-sheet popup for space).
+       The atlas title and info icon stay visible so branding/help stay accessible. */
+    body.popup-open #legend,
+    body.popup-open #info-panel,
+    body.popup-open #control-panel {
+        display: none !important;
+    }
+
+    /* Compact control panel on mobile.
+       Default state on mobile is COLLAPSED (set by JS), so the panel
+       only shows the toggle pill — which we shrink to an icon to leave
+       room for the legend on the left. When expanded, the panel widens
+       and is allowed to float above the legend (legend hides on popup
+       open anyway, and the user is actively engaging the panel). */
+    #control-panel {
+        width: auto;
+        max-width: 180px;
+        font-size: 11px;
+        bottom: 10px;
+    }
+
+    /* When collapsed on mobile: show ONLY the layers icon pill (no text
+       label, no +/− indicator). Compact ~44px square so the legend has
+       room. The .is-collapsed class is set by scripts.js. */
+    #control-panel.is-collapsed .control-collapse-label,
+    #control-panel.is-collapsed .control-collapse-icon {
+        display: none;
+    }
+    #control-panel.is-collapsed .control-collapse-toggle {
+        padding: 10px 12px;
+        justify-content: center;
+    }
+
+    /* When expanded on mobile, give the panel a real width so the
+       options text doesn't wrap awkwardly. */
+    #control-panel:not(.is-collapsed) {
+        width: 200px;
+    }
+
+    .control-collapse-toggle {
+        font-size: 11px;
+        padding: 6px 10px;
+    }
+    .control-panel-body {
+        padding: 8px 10px 10px;
+    }
+    .control-title {
+        font-size: 10px;
+    }
+
+    /* Info panel auto-dismissed on mobile (JS sets display:none on load);
+       if the user opens it, size it to be less overwhelming */
+    #info-panel {
+        max-width: 85vw;
+        max-height: 70vh;
+        padding: 14px;
+        font-size: 12px;
+    }
+
+    /* --- REPRESENTATIVES TAB CLEANUP --- */
+    .popup-col-rep h3 {
+        font-size: 15px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+    }
+
+    .popup-col-rep h3:first-child {
+        margin-top: 0;
+    }
+
+    .popup-col-rep .namelsad {
+        display: inline-block;
+        font-size: 12px;
+        padding: 4px 8px;
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+    }
+
+    .rep-info {
+        gap: 18px;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+
+    .rep-image {
+        width: 110px;
+        height: 110px;
+    }
+
+    .social-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .social-links img {
+        width: 26px;
+        height: 26px;
+    }
+
+    .senator-row {
+        margin-bottom: 10px;
+    }
+
+    .senator-image {
+        width: 52px;
+        height: 52px;
+    }
+
+    /* --- COUNTY DATA TAB CLEANUP --- */
+    .popup-col-disaster h3 {
+        font-size: 17px;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+    }
+
+    .popup-col-disaster .namelsad {
+        font-size: 13px;
+        padding: 5px 8px;
+        margin: 14px 0 10px;
+    }
+
+    .disaster-count {
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .disaster-count .count {
+        font-size: 44px;
+        padding-right: 4px;
+    }
+
+    .disaster-count .count-description {
+        font-size: 13px;
+        line-height: 1.25;
+    }
+
+    .atlas-cover {
+        width: 200px;
+        margin-top: 4px;
+    }
+
+    .popup-container p {
+        margin-top: 6px;
+        margin-bottom: 6px;
+        line-height: 1.35;
+    }
+}
+
+/* MOBILE RESPONSIVE STYLE FOR MAX WIDTH 400PX */
+@media (max-width: 400px) {
+    .popup-container {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .popup-column {
+        flex: 1 1 100%;
+    }
+
+    .popup-column h3 {
+        font-size: calc(8px + 0.2vw);
+        margin-bottom: 3px;
+    }
+
+    .disaster-count .count {
+        font-size: 30px;
+        margin-top: 6px;
+    }
+
+    .disaster-count .count-description {
+        font-size: 9px;
+        line-height: 1.2;
+        margin-top: 2px;
+    }
+
+    .namelsad {
+        font-size: 9px;
+        margin-bottom: 1px;
+    }
+
+    .table-cell {
+        padding: 2px;
+    }
+
+    .atlas-cover {
+        width: 130px;
+        margin-bottom: 1px;
+    }
+
+    .rep-image {
+        width: 80px;
+        height: 80px;
+    }
+
+    .senator-image {
+        width: 50px;
+        height: 50px;
+    }
+
+    .social-links img {
+        width: 16px;
+        height: 16px;
+    }
+
+    p {
+        font-size: 9px;
+        line-height: 1.2;
+    }
+
+    b {
+        font-size: 9px;
+        line-height: 1.2;
+    }
+
+    li {
+        font-size: 9px;
+        line-height: 1.2;
+    }
+
+    h2,
+    h3 {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+
+    a:link,
+    a:visited,
+    a:hover,
+    a:active {
+        font-size: 9px;
+        line-height: 1.2;
+    }
+
+    .formatted-value {
+        font-size: 9px;
+        line-height: 1.2;
+    }
+
+    .popup-container p {
+        margin-bottom: 2px;
+    }
+
+    .button-report {
+        font-size: 11px;
+        padding: 0.175em 0.35em;
+    }
+
+    #legend {
+        width: 180px;
+        padding: 2px;
+        font-size: 8px;
+    }
+
+    .color-bar {
+        height: 20px;
+    }
+
+    .color-description {
+        font-size: 9px;
+    }
+
+    .legend-item {
+        font-size: 9px;
+    }
+
+    .legend-rectangle {
+        width: 30px;
+        height: 10px;
+    }
+
+    #info-panel {
+        width: 280px;
+    }
+}

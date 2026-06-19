@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Atlas of Accountability — Federal Disaster Declarations & Legislative Districts</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+
+    <!-- SEO + social-share preview. og:image is a project key visual hosted on
+         rebuildbydesign.org so links shared by partners, funders, and press
+         unfurl into a rich card instead of a blank tile. -->
+    <meta name="description" content="Interactive map of federal disaster declarations and FEMA recovery funding across U.S. counties and congressional districts, 2011–2024. A tool from Rebuild by Design to support resilience planning, policy, and partnership.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Atlas of Accountability — Rebuild by Design">
+    <meta property="og:description" content="Interactive map of federal disaster declarations and FEMA recovery funding across U.S. counties and congressional districts, 2011–2024.">
+    <meta property="og:image" content="https://rebuildbydesign.org/wp-content/uploads/AOA-tool.jpg">
+    <meta property="og:url" content="https://rebuildbydesign.org/atlas-of-disaster">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Atlas of Accountability — Rebuild by Design">
+    <meta name="twitter:description" content="Federal disaster declarations and FEMA recovery funding across U.S. counties and congressional districts, 2011–2024.">
+    <meta name="twitter:image" content="https://rebuildbydesign.org/wp-content/uploads/AOA-tool.jpg">
+
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+
+    <!-- CUSTOM GOOGLE FONT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Archivo:wght@800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+    <!-- MAPBOX SCRIPTS + GEOCODER -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+    <script
+        src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js'></script>
+    <link rel='stylesheet' href='geocoder.css' type='text/css' /> <!-- Updated link -->
+
+
+    <!-- LINK TO STYLESHEET -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- ATLAS OF ACCOUNTABILITY LOGO — live HTML/CSS wordmark (replaces atlas-logo.png) -->
+    <div class="css-atlas-title">
+        <h1 class="atlas-word">Atlas of Accountability</h1>
+        <span class="atlas-sub">FEMA disasters, recovery funding &amp; who&rsquo;s exposed &mdash; by county &amp; district</span>
+    </div>
+
+
+    <!-- MAPBOX MAP -->
+    <div id="map"></div>
+
+
+    <!-- LEGEND — body content swaps based on the active data lens -->
+    <div id="legend">
+        <div id="legend-body">
+            <!-- Populated dynamically by scripts.js (see lensConfig.legendHTML) -->
+        </div>
+        <!-- Congressional Districts Boundary (always visible) -->
+        <div class="legend-item">
+            <div class="legend-rectangle"></div>
+            <span><b>Congressional Districts</b></span>
+        </div>
+    </div>
+
+
+    <!-- DATA LENS CONTROL PANEL — radio toggle to swap the choropleth -->
+    <div id="control-panel">
+        <button id="control-collapse-toggle" class="control-collapse-toggle" type="button" aria-expanded="true" aria-controls="control-panel-body" aria-label="Toggle data layers">
+            <i class="fas fa-layer-group control-collapse-glyph" aria-hidden="true"></i>
+            <span class="control-collapse-label">Data Layers</span>
+            <span class="control-collapse-icon" aria-hidden="true">−</span>
+        </button>
+        <div id="control-panel-body" class="control-panel-body">
+            <div class="control-section">
+                <!-- Group 1: Federal Disaster Response — disaster counts +
+                     federal funding lenses keyed off FEMA data. -->
+                <div class="control-subgroup-title">Federal Data</div>
+                <div class="control-options">
+                    <label class="control-option">
+                        <input type="radio" name="lens" value="disaster" checked>
+                        <span>FEMA Disaster Declarations</span>
+                    </label>
+                    <label class="control-option">
+                        <input type="radio" name="lens" value="fema">
+                        <span>FEMA Disaster Funding</span>
+                    </label>
+                    <label class="control-option">
+                        <input type="radio" name="lens" value="svi">
+                        <span>Social Vulnerability</span>
+                    </label>
+                    <label class="control-option">
+                        <input type="radio" name="lens" value="energy">
+                        <span>Energy Reliability</span>
+                    </label>
+                    <!-- Sub-toggle revealed only when Energy Reliability lens is active -->
+                    <div class="control-suboptions" data-lens="energy" style="display:none;">
+                        <label class="control-suboption">
+                            <input type="radio" name="energy-mode" value="avg" checked>
+                            <span>Average outage</span>
+                        </label>
+                        <label class="control-suboption">
+                            <input type="radio" name="energy-mode" value="max">
+                            <span>Worst-case outage</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Group 2: Who's Affected — population-overlay lenses that
+                     surface which communities sit under the disaster ramp. -->
+                <div class="control-subgroup-title">Who's Affected</div>
+                <div class="control-options">
+                    <label class="control-option">
+                        <input type="radio" name="lens" value="urban">
+                        <span>Urban Counties</span>
+                    </label>
+                    <label class="control-option">
+                        <input type="radio" name="lens" value="rural">
+                        <span>Rural Counties</span>
+                    </label>
+                    <label class="control-option">
+                        <input type="radio" name="lens" value="older">
+                        <span>Older Adults 60+</span>
+                    </label>
+                    <label class="control-option">
+                        <input type="radio" name="lens" value="minority">
+                        <span>Communities of Color</span>
+                    </label>
+                    <!-- Older Adults sub-options hidden for now. Lens defaults
+                         straight to the "Older adults & disaster declarations"
+                         view via lensConfig.older.defaultSubMode in scripts.js.
+                         To restore the dual-mode toggle, uncomment this block:
+                    <div class="control-suboptions" data-lens="older" style="display:none;">
+                        <label class="control-suboption">
+                            <input type="radio" name="older-mode" value="concentration" checked>
+                            <span>Where older adults live</span>
+                        </label>
+                        <label class="control-suboption">
+                            <input type="radio" name="older-mode" value="disastersFaced">
+                            <span>Older adults &amp; disaster declarations</span>
+                        </label>
+                    </div>
+                    -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- INFORMATION BOX TOP LEFT WITH METHODOLOGY -->
+    <button id="info-icon" type="button" aria-label="Open About panel" aria-controls="info-panel">
+        <i class="fas fa-question-circle" aria-hidden="true"></i>
+    </button>
+    <div id="info-panel">
+        <button id="close-info-panel" type="button" aria-label="Close About panel">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+        <img src="img/rebuildbydesign.png" alt="Rebuild by Design" style="width: 200px; height: 34px">
+        <h3 class="info-panel-title">HOW TO USE THIS INTERACTIVE MAP</h3>
+        <p><b>1) CLICK ON A COUNTY</b> to view the number of major disaster declarations, post-disaster federal funding, and detailed information about your congressional and state representatives.</p>
+        <p><b>2) SEARCH AN ADDRESS</b> located at the top right corner of the map to enter a specific address. This will reveal county-level data and provide information about the corresponding congressional and state representatives.</p>
+        <p><b>3) NAVIGATE THE MAP</b> by clicking and dragging with your mouse. Zoom in and out to explore other parts of the country.</p>
+        <p><b>4) TAKE ACTION</b> by contacting your representatives. If you are a representative, collaborate with other policymakers whose constituents are experiencing increased and severe disasters. Together, we can advocate for stronger, more resilient infrastructure in our communities.</p>
+        <p><b>5) PARTNER WITH US</b> if your foundation, agency, or organization wants to use this data to inform funding, policy, or resilience strategy. We collaborate with funders, governments, and NGOs on tailored analyses and briefings.
+            <a class="info-panel-partner-link" href="mailto:info@rebuildbydesign.org?subject=Partner%20with%20Rebuild%20by%20Design%20%E2%80%94%20Atlas%20of%20Accountability">info@rebuildbydesign.org</a>
+        </p>
+
+        <!-- 
+        <p class="info-panel-meta">Data sources &amp; methodology: <a href="https://rebuildbydesign.org/atlas-of-disaster#methodology" target="_blank" rel="noopener">rebuildbydesign.org/atlas-of-accountability</a></p>-->
+    </div>
+
+
+    <!-- LINK TO SCRIPTS DATA -->
+    <script src="scripts.js"></script>
+
+
+</body>
+
+</html>

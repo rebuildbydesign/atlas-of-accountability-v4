@@ -1,0 +1,373 @@
+/* ============================================================================
+   STATE FILTER + FACT SHEET  (add-on stylesheet, loaded after styles.css)
+   Matches the Atlas default (disaster-lens) palette: brand red #de2d26,
+   deep red #a50f15, soft red tints #fdecea/#f0bdb8, ink #1a1a1a,
+   Poppins type. Nothing here overrides existing selectors.
+   ========================================================================== */
+
+/* ---- Bottom-center control bar ------------------------------------------- */
+#sf-controls {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 13px;
+    max-width: calc(100vw - 24px);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#sf-controls .sf-ctrl-label {
+    font-weight: 600;
+    color: #a50f15;
+    white-space: nowrap;
+}
+
+#sf-controls select {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 13px;
+    padding: 5px 8px;
+    border: 1px solid #f0bdb8;
+    border-radius: 4px;
+    background: #fff;
+    color: #1a1a1a;
+    cursor: pointer;
+    max-width: 200px;
+}
+
+#sf-controls select:focus-visible {
+    outline: 2px solid #de2d26;
+    outline-offset: 1px;
+}
+
+#sf-toggle {
+    border: none;
+    background: #de2d26;
+    color: #fff;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#sf-toggle:hover { background: #a50f15; }
+
+/* Hide button (collapses the bar) */
+#sf-hide {
+    border: 1px solid #f0bdb8;
+    background: #fff;
+    color: #a50f15;
+    font-size: 13px;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#sf-hide:hover { background: #fdecea; }
+
+#sf-controls.sf-collapsed { display: none; }
+
+/* Compact reopener — sits where the bar was, hidden until "hide" is used */
+#sf-reopen {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: #de2d26;
+    color: #fff;
+    border: none;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+}
+
+#sf-reopen.show { display: flex; }
+#sf-reopen:hover { background: #a50f15; }
+
+/* ---- Right slide-in fact-sheet panel ------------------------------------- */
+#sf-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 420px;
+    max-width: 92vw;
+    z-index: 1001;
+    background: #ffffff;
+    box-shadow: -2px 0 14px rgba(0, 0, 0, 0.22);
+    transform: translateX(105%);
+    transition: transform 0.28s ease;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Poppins', Arial, sans-serif;
+    color: #1a1a1a;
+}
+
+#sf-panel.open { transform: translateX(0); }
+
+.sf-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #a50f15;
+    color: #fff;
+    flex: 0 0 auto;
+}
+
+.sf-panel-head .sf-panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.sf-panel-head .sf-head-btns { display: flex; gap: 8px; }
+
+.sf-panel-head button {
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: transparent;
+    color: #fff;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.sf-panel-head button:hover { background: rgba(255, 255, 255, 0.18); }
+
+#sf-body {
+    padding: 16px 18px 32px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.sf-empty { color: #777; font-size: 13px; }
+
+.sf-state-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1.1;
+}
+
+.sf-state-title .sf-vs {
+    font-size: 15px;
+    font-weight: 600;
+    color: #de2d26;
+}
+
+.sf-source {
+    font-size: 10.5px;
+    color: #888;
+    margin: 4px 0 16px;
+}
+
+.sf-section {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a50f15;
+    border-bottom: 2px solid #de2d26;
+    padding-bottom: 4px;
+    margin: 18px 0 10px;
+}
+
+/* Headline comparison table */
+table.sf-headline {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+}
+
+table.sf-headline th {
+    text-align: right;
+    font-weight: 700;
+    color: #1a1a1a;
+    border-bottom: 1px solid #ccc;
+    padding: 5px 6px;
+}
+
+table.sf-headline th:first-child { text-align: left; }
+
+table.sf-headline td {
+    text-align: right;
+    padding: 5px 6px;
+    border-bottom: 1px solid #eee;
+}
+
+table.sf-headline td:first-child {
+    text-align: left;
+    color: #444;
+}
+
+table.sf-headline tr:nth-child(even) td { background: #fdecea; }
+
+/* Muted "U.S. average/median" benchmark line under a metric name */
+.sf-natl {
+    display: block;
+    font-size: 10px;
+    font-weight: 400;
+    color: #999;
+    margin-top: 1px;
+}
+
+/* SVI severity pill — Low / Moderate / High / Very High */
+.sf-band {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 2px 5px;
+    border-radius: 3px;
+    vertical-align: 1px;
+    white-space: nowrap;
+}
+.sf-band-low   { background: #f1efe8; color: #5f5e5a; }
+.sf-band-mod   { background: #fee5d9; color: #a50f15; }
+.sf-band-high  { background: #fb6a4a; color: #fff; }
+.sf-band-vhigh { background: #a50f15; color: #fff; }
+
+/* Top-10 category blocks */
+.sf-cats { display: flex; flex-direction: column; gap: 16px; }
+
+.sf-cat h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 6px;
+}
+
+.sf-cat h4 .sf-unit {
+    font-weight: 400;
+    font-size: 11px;
+    color: #999;
+}
+
+.sf-cat ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: sf;
+}
+
+.sf-cat li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    counter-increment: sf;
+    font-size: 12.5px;
+    padding: 3px 0;
+    border-bottom: 1px dotted #e3e3e3;
+}
+
+.sf-cat li::before {
+    content: counter(sf);
+    flex: 0 0 20px;
+    color: #de2d26;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+.sf-cat .sf-county { flex: 1 1 auto; color: #333; }
+.sf-cat .sf-val { flex: 0 0 auto; font-weight: 600; color: #a50f15; padding-left: 8px; }
+
+/* Plain-language "why this matters" note under each table heading */
+.sf-why {
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: #555;
+    margin: 0 0 8px;
+    border-left: 3px solid #fcae91;
+    padding-left: 8px;
+}
+
+/* Sources & methodology footer */
+.sf-method-intro {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #444;
+    margin: 0 0 12px;
+}
+
+dl.sf-method {
+    margin: 0;
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+
+dl.sf-method dt {
+    font-weight: 700;
+    color: #a50f15;
+    margin-top: 8px;
+}
+
+dl.sf-method dd {
+    margin: 1px 0 0;
+    color: #555;
+}
+
+.sf-method-foot {
+    font-size: 10.5px;
+    color: #999;
+    margin: 16px 0 0;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+}
+
+/* ---- Mobile --------------------------------------------------------------- */
+@media (max-width: 768px) {
+    #sf-panel { width: 100%; max-width: 100%; }
+    #sf-controls { bottom: 14px; font-size: 12px; padding: 6px 8px; }
+    #sf-controls select { max-width: 130px; }
+    #sf-reopen { bottom: 14px; }
+}
+
+/* ---- Print: fact sheet only ---------------------------------------------- */
+@media print {
+    body * { visibility: hidden !important; }
+    #sf-panel, #sf-panel * { visibility: visible !important; }
+    /* Keep brand red, alternating rows, and SVI pills in the exported PDF. */
+    #sf-panel, #sf-panel * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    #sf-panel {
+        position: absolute !important;
+        transform: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    .sf-panel-head .sf-head-btns { display: none !important; }
+    #sf-body { overflow: visible !important; }
+    /* Avoid splitting a category block across pages where possible. */
+    .sf-cat, table.sf-headline { break-inside: avoid; }
+}

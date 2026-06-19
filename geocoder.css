@@ -1,0 +1,259 @@
+/* Basics */
+.mapboxgl-ctrl-geocoder,
+.mapboxgl-ctrl-geocoder *,
+.mapboxgl-ctrl-geocoder *:after,
+.mapboxgl-ctrl-geocoder *:before {
+    box-sizing: border-box;
+}
+
+.mapboxgl-ctrl-geocoder {
+    position: absolute;
+    top: 20px; /* 100px from the top */
+    right: 40px; /* 20px from the right */
+    background-color: #000; /* Black background */
+    width: 225px;
+    color: #fff; /* White text */
+    min-width: 225px;
+    z-index: 999;
+    border-radius: 0px;
+    transition: width .25s, min-width .25s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); /* Shadow for better visibility */
+}
+
+.mapboxgl-ctrl-geocoder--input {
+    font: inherit;
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    margin: 0;
+    height: 40px;
+    color: #fff; /* White text */
+    font-weight: bold; /* Bold text */
+    padding: 10px;
+    font-size: 16px;
+    font-family: 'Arial';
+    padding-left: 40px; /* Move text to the right to avoid blocking the icon */
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.mapboxgl-ctrl-geocoder--input::-ms-clear {
+    display: none; /* Hide input clear button in IE */
+}
+
+.mapboxgl-ctrl-geocoder--input:focus {
+    color: #fff; /* White text */
+    outline: thin dotted;
+}
+
+/* Set placeholder text color to white and font family to Arial */
+.mapboxgl-ctrl-geocoder--input::placeholder {
+    color: #fff; /* White text */
+    opacity: 1; /* Ensures the color is not faded */
+    font-family: 'Arial'; /* Font family */
+}
+
+.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right>* {
+    z-index: 2;
+    position: absolute;
+    right: 8px;
+    top: 7px;
+    display: none;
+}
+
+.mapboxgl-ctrl-geocoder,
+.mapboxgl-ctrl-geocoder .suggestions {
+    box-shadow: 0 0 10px 2px rgba(0, 0, 0, .1);
+}
+
+/* Collapsed */
+.mapboxgl-ctrl-geocoder.mapboxgl-ctrl-geocoder--collapsed {
+    width: 50px;
+    min-width: 50px;
+    transition: width .25s, min-width .25s;
+}
+
+/* Suggestions */
+.mapboxgl-ctrl-geocoder .suggestions {
+    background-color: #000; /* Black background for suggestions */
+    border: none;
+    border-radius: 0 0 8px 8px;
+    left: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    width: 100%;
+    top: calc(100% + 6px);
+    z-index: 1000;
+    overflow: hidden;
+    font-size: 15px;
+}
+
+.mapboxgl-ctrl-bottom-left .suggestions,
+.mapboxgl-ctrl-bottom-right .suggestions {
+    top: auto;
+    bottom: 100%;
+}
+
+.mapboxgl-ctrl-geocoder .suggestions>li>a {
+    cursor: default;
+    display: block;
+    padding: 6px 12px;
+    color: #fff; /* White text */
+}
+
+.mapboxgl-ctrl-geocoder .suggestions>.active>a,
+.mapboxgl-ctrl-geocoder .suggestions>li>a:hover {
+    color: #000; /* Black text */
+    background-color: #f3f3f3;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.mapboxgl-ctrl-geocoder--suggestion-title {
+    font-weight: bold;
+}
+
+.mapboxgl-ctrl-geocoder--suggestion-title,
+.mapboxgl-ctrl-geocoder--suggestion-address {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Icons */
+.mapboxgl-ctrl-geocoder--icon {
+    display: inline-block;
+    vertical-align: middle;
+    fill: #fff; /* White icon color */
+    top: 10px;
+}
+
+.mapboxgl-ctrl-geocoder--icon-search {
+    position: absolute;
+    top: 9px;
+    left: 10px; /* Adjust the icon position */
+    width: 23px;
+    height: 23px;
+}
+
+.mapboxgl-ctrl-geocoder--button {
+    padding: 0;
+    margin: 0;
+    border: none;
+    cursor: pointer;
+    background: #000; /* Black background */
+    line-height: 1;
+}
+
+.mapboxgl-ctrl-geocoder--icon-close {
+    width: 20px;
+    height: 20px;
+    margin-top: 8px;
+    margin-right: 3px;
+}
+
+.mapboxgl-ctrl-geocoder--button:hover .mapboxgl-ctrl-geocoder--icon-close {
+    fill: #fff; /* White icon hover color */
+}
+
+.mapboxgl-ctrl-geocoder--icon-geolocate {
+    width: 22px;
+    height: 22px;
+    margin-top: 6px;
+    margin-right: 3px;
+}
+
+.mapboxgl-ctrl-geocoder--icon-loading {
+    width: 26px;
+    height: 26px;
+    margin-top: 5px;
+    margin-right: 0px;
+    animation: rotate 0.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+}
+
+/* Powered by */
+.mapboxgl-ctrl-geocoder--powered-by {
+    display: block;
+    float: left;
+    padding: 6px 12px;
+    padding-bottom: 9px;
+    font-size: 13px;
+}
+
+.mapboxgl-ctrl-geocoder--powered-by a {
+    color: #fff; /* White text */
+}
+
+.mapboxgl-ctrl-geocoder--powered-by a:not(:hover) {
+    text-decoration: none;
+}
+
+/* Animation */
+@-webkit-keyframes rotate {
+    from {
+        -webkit-transform: rotate(0);
+        transform: rotate(0);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Nudge animation */
+@keyframes nudge {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(7px);
+    }
+}
+
+.nudge {
+    animation: nudge 0.5s ease-in-out infinite;
+}
+
+/* Mobile specific styles */
+@media (max-width: 600px) {
+    .mapboxgl-ctrl-geocoder {
+        width: 150px;
+        min-width: 150px;
+        top: 45px; /* increased from 20px → moves geocoder down 50px */
+        right: 45px; /* optional: tighter margin for mobile */
+    }
+
+    .mapboxgl-ctrl-geocoder--input {
+        height: 25px;
+        font-size: 10px;
+        padding: 10px;
+        padding-left: 25px;
+    }
+
+    .mapboxgl-ctrl-geocoder--icon-search {
+        top: 5px;
+        left: 7px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .mapboxgl-ctrl-geocoder .suggestions {
+        font-size: 11px;
+    }
+
+    .mapboxgl-ctrl-geocoder .suggestions>li>a {
+        padding: 4px 8px;
+    }
+}
