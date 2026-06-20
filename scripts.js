@@ -856,6 +856,40 @@ map.on('load', function () {
                 'circle-stroke-width': 0.6
             }
         });
+        // COUNTY NAME LABELS — placed at county centroids (reusing the
+        // same points source). Hidden at national zoom (minzoom 7) to
+        // avoid 3,000 overlapping labels; collision detection thins them
+        // automatically as the user zooms. Dark text + white halo reads
+        // over any choropleth color.
+        if (!map.getLayer('county-labels')) {
+            map.addLayer({
+                id: 'county-labels',
+                type: 'symbol',
+                source: 'atlas-fema-points',
+                minzoom: 6,
+                // This is a West Virginia workshop map — only label WV
+                // counties, never the surrounding states.
+                filter: ['==', ['get', 'STATE_NAME'], 'West Virginia'],
+                layout: {
+                    // Strip the trailing " County" (7 chars) from NAMELSAD —
+                    // e.g. "Kanawha County" → "Kanawha" — for readability.
+                    'text-field': ['slice', ['get', 'NAMELSAD'], 0, ['max', 0, ['-', ['length', ['get', 'NAMELSAD']], 7]]],
+                    'text-font': ['Apercu Pro Bold', 'Arial Unicode MS Bold'],
+                    'text-size': ['interpolate', ['linear'], ['zoom'], 6, 11, 10, 14, 13, 16],
+                    'text-padding': 2,
+                    'text-allow-overlap': false
+                },
+                paint: {
+                    'text-color': '#111111',
+                    // Thick, solid white halo so names stay legible over the
+                    // red choropleth and the blue floodplain corridors.
+                    'text-halo-color': '#ffffff',
+                    'text-halo-width': 2.2,
+                    'text-halo-blur': 0
+                }
+            });
+        }
+
         // If the user's already on the dots sub-mode (e.g. via deep-link or
         // by selecting it before the fetch resolved), re-run styling so
         // the layer becomes visible immediately.
@@ -1807,6 +1841,150 @@ map.on('load', function () {
             'line-width': 0.5
         }
     });
+
+
+    // -------------------------------------------------------------
+    // WHITE COUNTY BOUNDARIES — thin white lines between counties so
+    // individual counties read against the choropleth. Subtle at
+    // national zoom, crisp when zoomed into a state. Drawn from the
+    // same atlas-fema county source, beneath labels and the floodplain.
+    // -------------------------------------------------------------
+    map.addLayer({
+        id: 'county-borders',
+        type: 'line',
+        source: 'atlas-fema',
+        paint: {
+            'line-color': '#ffffff',
+            'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.2, 7, 0.6, 10, 1, 13, 1.6],
+            'line-opacity': ['interpolate', ['linear'], ['zoom'], 4, 0.25, 7, 0.6, 10, 0.85]
+        }
+    }, 'state-label');
+
+    // -------------------------------------------------------------
+    // WEST VIRGINIA WORKSHOP LAYERS
+    // -------------------------------------------------------------
+    // State-specific overlays that appear in the Data Layers panel
+    // ONLY when West Virginia is the selected state. Unlike the lens
+    // radios (mutually-exclusive choropleths), these are CHECKBOX
+    // overlays that sit on top of whatever lens is active.
+    // statefilter.js calls window.AtlasWV.onStateChange(name) on every
+    // state change to reveal / hide this group.
+    //
+    // FEMA 100-yr floodplain: a pre-built, hosted GeoJSON of West
+    // Virginia's Special Flood Hazard Area (SFHA_TF='T' = 1% annual
+    // chance = the "100-year" floodplain), exported from FEMA's
+    // National Flood Hazard Layer, simplified, clipped to the WV state
+    // outline, and dissolved with mapshaper
+    // (data/wv_floodplain.geojson, ~2.4 MB, one MultiPolygon).
+    //
+    // Why hosted (not live FEMA): FEMA's tile service won't draw below
+    // ~1:36k scale and its symbology is too faint over the red
+    // choropleth — so it was invisible at the state overview. A static
+    // vector file renders our OWN bold blue at EVERY zoom, with no
+    // dependence on FEMA's API being up during the workshop. It is
+    // lazy-loaded the first time the layer is switched on so users who
+    // never open it don't pay the download.
+    //
+    // To refresh the data: re-run the fetch+mapshaper pipeline against
+    // NFHL layer 28 for the WV bbox and overwrite data/wv_floodplain.geojson.
+    //
+    // Adding another WV layer for a workshop?
+    //   1) add a checkbox in the #wv-layers-group block in index.html,
+    //   2) add its source + layer(s) here,
+    //   3) wire the checkbox the same way as setWVFlood below.
+    // -------------------------------------------------------------
+    var WV_FLOOD_SRC = 'wv-floodplain';
+    var WV_FLOOD_FILL = 'wv-floodplain-fill';
+    var WV_FLOOD_LINE = 'wv-floodplain-line';
+    var WV_FLOOD_URL = 'data/wv_floodplain.geojson';
+
+    map.addSource(WV_FLOOD_SRC, {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+        attribution: 'Flood hazard data: FEMA National Flood Hazard Layer (NFHL)'
+    });
+    map.addLayer({
+        id: WV_FLOOD_FILL,
+        type: 'fill',
+        source: WV_FLOOD_SRC,
+        layout: { visibility: 'none' },
+        paint: { 'fill-color': '#1f6fe5', 'fill-opacity': 0.5 }
+    });
+    map.addLayer({
+        id: WV_FLOOD_LINE,
+        type: 'line',
+        source: WV_FLOOD_SRC,
+        layout: { visibility: 'none' },
+        paint: {
+            'line-color': '#0a3a8c',
+            // Thicker at state zoom so the narrow river corridors stay
+            // visible when zoomed out; finer as you drill into a town.
+            'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.2, 8, 1, 12, 1.2, 15, 1.8],
+            'line-opacity': 0.9
+        }
+    });
+
+    var wvFloodToggle = document.getElementById('wv-floodplain-toggle');
+    var wvFloodLegend = document.getElementById('wv-flood-legend');
+    var wvFloodHint = document.querySelector('.wv-layer-hint');
+    var wvFloodLoaded = false;           // becomes true once the file is fetched
+
+    // Keep the WV overlays (and county labels) on top of everything,
+    // including the async older-adults dots layer.
+    function restackWVTop() {
+        [WV_FLOOD_FILL, WV_FLOOD_LINE].forEach(function (id) {
+            if (map.getLayer(id)) map.moveLayer(id);
+        });
+        if (map.getLayer('county-labels')) map.moveLayer('county-labels'); // labels above flood
+    }
+
+    // Lazy-load the hosted GeoJSON once, the first time the layer is shown.
+    function ensureFloodData() {
+        if (wvFloodLoaded) return;
+        wvFloodLoaded = true;            // guard against double-fetch on rapid toggling
+        if (wvFloodHint) wvFloodHint.textContent = 'Loading flood zones…';
+        fetch(WV_FLOOD_URL)
+            .then(function (r) { return r.json(); })
+            .then(function (geo) {
+                var src = map.getSource(WV_FLOOD_SRC);
+                if (src) src.setData(geo);
+                restackWVTop();
+                if (wvFloodHint) wvFloodHint.textContent = '1% annual-chance flood areas, shown statewide.';
+            })
+            .catch(function (e) {
+                wvFloodLoaded = false;   // allow a retry on next toggle
+                console.error('[wv-flood] failed to load', e);
+                if (wvFloodHint) wvFloodHint.textContent = 'Could not load flood data.';
+            });
+    }
+
+    function setWVFlood(on) {
+        var vis = on ? 'visible' : 'none';
+        if (map.getLayer(WV_FLOOD_FILL)) map.setLayoutProperty(WV_FLOOD_FILL, 'visibility', vis);
+        if (map.getLayer(WV_FLOOD_LINE)) map.setLayoutProperty(WV_FLOOD_LINE, 'visibility', vis);
+        if (wvFloodLegend) wvFloodLegend.style.display = on ? '' : 'none';
+        if (on) { ensureFloodData(); restackWVTop(); }
+    }
+    if (wvFloodToggle) {
+        wvFloodToggle.addEventListener('change', function (e) {
+            setWVFlood(e.target.checked);
+        });
+    }
+
+    // Public hook for statefilter.js: show the WV-only controls when West
+    // Virginia is selected, and reset its overlays when leaving the state.
+    window.AtlasWV = {
+        onStateChange: function (name) {
+            var isWV = (name === 'West Virginia');
+            document.querySelectorAll('.wv-only').forEach(function (el) {
+                el.style.display = isWV ? '' : 'none';
+            });
+            if (!isWV) {
+                if (wvFloodToggle) wvFloodToggle.checked = false;
+                setWVFlood(false);
+            }
+        }
+    };
 
 
     // Initialize the popup globally if it needs to be accessed by different layers.

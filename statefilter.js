@@ -22,6 +22,7 @@
   // the 2-digit state FIPS (STATEFP20); SVI tracts key off the GEOID prefix.
   var COUNTY_FILL = 'atlas-fema-layer';
   var COUNTY_DOTS = 'atlas-fema-dots-layer';
+  var COUNTY_BORDERS = 'county-borders';
   var CONGRESS_FILL = 'congress-layer';
   var CONGRESS_LINE = 'congress-border';
   var SVI_TRACTS = 'svi-tracts-layer';
@@ -179,10 +180,14 @@
   }
 
   function focusState(name) {
+    // Let scripts.js reveal/hide any state-specific layers (e.g. the WV
+    // workshop overlays) for the newly selected state.
+    if (window.AtlasWV) window.AtlasWV.onStateChange(name);
     if (name === '') {
       // Back to the full national view.
       safeSetFilter(COUNTY_FILL, null);
       safeSetFilter(COUNTY_DOTS, null);
+      safeSetFilter(COUNTY_BORDERS, null);
       safeSetFilter(CONGRESS_FILL, null);
       safeSetFilter(CONGRESS_LINE, null);
       safeSetFilter(SVI_TRACTS, null);
@@ -193,6 +198,7 @@
     var fp = STATES[name].fp;
     safeSetFilter(COUNTY_FILL, ['==', ['get', 'STATE_NAME'], name]);
     safeSetFilter(COUNTY_DOTS, ['==', ['get', 'STATE_NAME'], name]);
+    safeSetFilter(COUNTY_BORDERS, ['==', ['get', 'STATE_NAME'], name]);
     var congressFilter = ['==', ['to-string', ['get', 'STATEFP20']], String(fp)];
     safeSetFilter(CONGRESS_FILL, congressFilter);
     safeSetFilter(CONGRESS_LINE, congressFilter);

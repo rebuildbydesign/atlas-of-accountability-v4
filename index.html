@@ -100,6 +100,12 @@
             <div class="legend-rectangle"></div>
             <span><b>Congressional Districts</b></span>
         </div>
+        <!-- FEMA floodplain key — shown only while the WV floodplain overlay
+             is toggled on (managed by scripts.js setWVFlood). -->
+        <div class="legend-item" id="wv-flood-legend" style="display:none;">
+            <div class="legend-swatch-flood"></div>
+            <span><b>FEMA 100-yr Floodplain</b><br><span class="legend-mode-name">1% annual chance (SFHA)</span></span>
+        </div>
     </div>
 
 
@@ -181,6 +187,23 @@
                     </div>
                     -->
 
+                </div>
+
+                <!-- Group 3: West Virginia Layers — state-specific overlays
+                     revealed ONLY when West Virginia is the selected state
+                     (statefilter.js calls window.AtlasWV.onStateChange to
+                     show/hide everything tagged .wv-only). These are CHECKBOX
+                     overlays that sit ON TOP of whichever lens is active —
+                     not mutually-exclusive radios. Add more WV workshop
+                     layers by copying the pattern in scripts.js + a checkbox
+                     here. -->
+                <div class="control-subgroup-title wv-only" style="display:none;">West Virginia Layers</div>
+                <div class="control-options wv-only" id="wv-layers-group" style="display:none;">
+                    <label class="control-option">
+                        <input type="checkbox" id="wv-floodplain-toggle">
+                        <span>FEMA 100-yr Floodplain</span>
+                    </label>
+                    <div class="wv-layer-hint">1% annual-chance flood areas, shown statewide.</div>
                 </div>
             </div>
         </div>
