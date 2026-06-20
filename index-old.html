@@ -41,9 +41,6 @@
 
     <!-- LINK TO STYLESHEET -->
     <link rel="stylesheet" href="styles.css">
-
-    <!-- STATE FILTER + FACT SHEET add-on (standalone build) -->
-    <link rel="stylesheet" href="statefilter.css">
 </head>
 
 <body>
@@ -56,38 +53,6 @@
 
     <!-- MAPBOX MAP -->
     <div id="map"></div>
-
-
-    <!-- STATE FILTER CONTROL BAR — focus the Atlas on one state and open its
-         auto-generated fact sheet. Populated by statefilter.js. -->
-    <div id="sf-controls">
-        <span class="sf-ctrl-label">State</span>
-        <select id="sf-state" aria-label="Filter to a state"></select>
-        <span class="sf-ctrl-label">Compare</span>
-        <select id="sf-compare" aria-label="Compare to another state"></select>
-        <button id="sf-toggle" type="button">Fact sheet</button>
-        <button id="sf-hide" type="button" aria-label="Hide state filter" title="Hide filter">
-            <i class="fas fa-times" aria-hidden="true"></i>
-        </button>
-    </div>
-
-    <!-- Compact reopener shown after the bar is hidden -->
-    <button id="sf-reopen" type="button" aria-label="Show state filter">
-        <i class="fas fa-sliders-h" aria-hidden="true"></i> Filter by state
-    </button>
-
-
-    <!-- FACT-SHEET PANEL — state headline stats + top-10 county rankings. -->
-    <div id="sf-panel">
-        <div class="sf-panel-head">
-            <span class="sf-panel-title">State Fact Sheet</span>
-            <div class="sf-head-btns">
-                <button id="sf-print" type="button">Print / PDF</button>
-                <button id="sf-close" type="button" aria-label="Close fact sheet">Close</button>
-            </div>
-        </div>
-        <div id="sf-body"></div>
-    </div>
 
 
     <!-- LEGEND — body content swaps based on the active data lens -->
@@ -212,10 +177,6 @@
 
     <!-- LINK TO SCRIPTS DATA -->
     <script src="scripts.js"></script>
-
-    <!-- STATE FILTER + FACT SHEET add-on (must load AFTER scripts.js so it can
-         reuse the global `map` and the layers scripts.js adds) -->
-    <script src="statefilter.js"></script>
 
 
 </body>
