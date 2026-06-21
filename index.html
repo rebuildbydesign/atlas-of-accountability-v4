@@ -100,11 +100,23 @@
             <div class="legend-rectangle"></div>
             <span><b>Congressional Districts</b></span>
         </div>
-        <!-- FEMA floodplain key — shown only while the WV floodplain overlay
-             is toggled on (managed by scripts.js setWVFlood). -->
-        <div class="legend-item" id="wv-flood-legend" style="display:none;">
+        <!-- WV overlay keys — each shown only while its overlay is toggled
+             on (managed by scripts.js setOverlay; ids: wv-<key>-legend). -->
+        <div class="legend-item" id="wv-floodplain-legend" style="display:none;">
             <div class="legend-swatch-flood"></div>
             <span><b>FEMA 100-yr Floodplain</b><br><span class="legend-mode-name">1% annual chance (SFHA)</span></span>
+        </div>
+        <div class="legend-item" id="wv-reploss-legend" style="display:none;">
+            <div class="legend-swatch-reploss"></div>
+            <span><b>Repetitive Loss Areas</b><br><span class="legend-mode-name">Flooded again &amp; again</span></span>
+        </div>
+        <div class="legend-item" id="wv-buyouts-legend" style="display:none;">
+            <div class="legend-swatch-buyouts"></div>
+            <span><b>Flood Buyouts</b><br><span class="legend-mode-name">Mitigated parcels (already funded)</span></span>
+        </div>
+        <div class="legend-item" id="wv-watersheds-legend" style="display:none;">
+            <div class="legend-swatch-watersheds"></div>
+            <span><b>HUC-8 Watersheds</b><br><span class="legend-mode-name">Planning units for NBS</span></span>
         </div>
     </div>
 
@@ -199,11 +211,28 @@
                      here. -->
                 <div class="control-subgroup-title wv-only" style="display:none;">West Virginia Layers</div>
                 <div class="control-options wv-only" id="wv-layers-group" style="display:none;">
+                    <label class="control-option wv-base-row">
+                        <input type="checkbox" id="wv-base-toggle">
+                        <span>Hide base data layer</span>
+                    </label>
+                    <div class="wv-layer-hint">Check to view the WV layers on their own.</div>
                     <label class="control-option">
                         <input type="checkbox" id="wv-floodplain-toggle">
                         <span>FEMA 100-yr Floodplain</span>
                     </label>
-                    <div class="wv-layer-hint">1% annual-chance flood areas, shown statewide.</div>
+                    <label class="control-option">
+                        <input type="checkbox" id="wv-reploss-toggle">
+                        <span>Repetitive Loss Areas</span>
+                    </label>
+                    <label class="control-option">
+                        <input type="checkbox" id="wv-buyouts-toggle">
+                        <span>Flood Buyouts (mitigated parcels)</span>
+                    </label>
+                    <label class="control-option">
+                        <input type="checkbox" id="wv-watersheds-toggle">
+                        <span>HUC-8 Watersheds</span>
+                    </label>
+                    <div class="wv-layer-hint">Overlays for siting nature-based solutions &amp; flood-fund investment.</div>
                 </div>
             </div>
         </div>

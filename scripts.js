@@ -971,6 +971,15 @@ map.on('load', function () {
     //     overlay reads cleanly; show the dots layer.
     // Also refreshes the click popup's Indicators block (if open) so
     // the active-row highlight follows the lens change in real time.
+    // Master visibility for the base choropleth (the lens output). The WV
+    // workshop panel can switch this off so the WV overlays read on a clean
+    // map. applyActiveStyling honors it; setBaseDataVisible flips it.
+    var baseDataVisible = true;
+    function setBaseDataVisible(on) {
+        baseDataVisible = on;
+        applyActiveStyling();
+    }
+
     function applyActiveStyling() {
         const spec = resolveLensSpec(activeLens);
         if (!spec) return;
@@ -1016,8 +1025,21 @@ map.on('load', function () {
             map.setLayoutProperty('svi-tracts-outline', 'visibility', isTracts ? 'visible' : 'none');
         }
 
+        // WV workshop "hide base data" override: drop the choropleth + dots +
+        // tracts so the WV overlays read on a clean basemap. atlas-fema-layer
+        // stays present at opacity 0 so the click/query path keeps working.
+        if (!baseDataVisible) {
+            map.setPaintProperty('atlas-fema-layer', 'fill-opacity', 0);
+            if (map.getLayer('atlas-fema-dots-layer')) map.setLayoutProperty('atlas-fema-dots-layer', 'visibility', 'none');
+            if (map.getLayer('svi-tracts-layer')) map.setLayoutProperty('svi-tracts-layer', 'visibility', 'none');
+            if (map.getLayer('svi-tracts-outline')) map.setLayoutProperty('svi-tracts-outline', 'visibility', 'none');
+        }
+
         const legendBody = document.getElementById('legend-body');
-        if (legendBody) legendBody.innerHTML = spec.legendHTML;
+        if (legendBody) {
+            legendBody.innerHTML = spec.legendHTML;
+            legendBody.style.display = baseDataVisible ? '' : 'none'; // hide the lens key when base is off
+        }
         updateFilterBadgeInLegend();
         renderSviScope();
         refreshIndicatorsIfPopupOpen();
@@ -1395,6 +1417,8 @@ map.on('load', function () {
             hoverPopup.remove();
             return;
         }
+        // Defer to a WV overlay tooltip when one is under the cursor.
+        if (typeof wvFeatureAt === 'function' && wvFeatureAt(e.point)) return;
         if (!e.features || !e.features.length) return;
         var p = e.features[0].properties;
         var county = p.NAMELSAD || 'Unknown county';
@@ -1844,135 +1868,260 @@ map.on('load', function () {
 
 
     // -------------------------------------------------------------
-    // WHITE COUNTY BOUNDARIES — thin white lines between counties so
-    // individual counties read against the choropleth. Subtle at
-    // national zoom, crisp when zoomed into a state. Drawn from the
-    // same atlas-fema county source, beneath labels and the floodplain.
+    // BLACK COUNTY BOUNDARIES — always-on county outlines so counties
+    // read whether the choropleth is on OR hidden (white lines vanish
+    // on the light basemap when the base data layer is switched off).
+    // Drawn from the atlas-fema county source, beneath labels/overlays.
     // -------------------------------------------------------------
     map.addLayer({
         id: 'county-borders',
         type: 'line',
         source: 'atlas-fema',
         paint: {
-            'line-color': '#ffffff',
-            'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.2, 7, 0.6, 10, 1, 13, 1.6],
-            'line-opacity': ['interpolate', ['linear'], ['zoom'], 4, 0.25, 7, 0.6, 10, 0.85]
+            'line-color': '#000000',
+            'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.3, 7, 0.7, 10, 1.1, 13, 1.7],
+            'line-opacity': ['interpolate', ['linear'], ['zoom'], 4, 0.4, 7, 0.7, 10, 0.9]
         }
     }, 'state-label');
 
     // -------------------------------------------------------------
-    // WEST VIRGINIA WORKSHOP LAYERS
+    // WEST VIRGINIA WORKSHOP LAYERS  (counter-mapping the Flood Resiliency Trust Fund)
     // -------------------------------------------------------------
-    // State-specific overlays that appear in the Data Layers panel
-    // ONLY when West Virginia is the selected state. Unlike the lens
-    // radios (mutually-exclusive choropleths), these are CHECKBOX
-    // overlays that sit on top of whatever lens is active.
-    // statefilter.js calls window.AtlasWV.onStateChange(name) on every
-    // state change to reveal / hide this group.
+    // State-specific overlays shown in the Data Layers panel ONLY when
+    // West Virginia is the selected state. Unlike the lens radios
+    // (mutually-exclusive choropleths), these are CHECKBOX overlays that
+    // sit on top of whatever lens is active. statefilter.js calls
+    // window.AtlasWV.onStateChange(name) on every state change to
+    // reveal / hide everything tagged .wv-only.
     //
-    // FEMA 100-yr floodplain: a pre-built, hosted GeoJSON of West
-    // Virginia's Special Flood Hazard Area (SFHA_TF='T' = 1% annual
-    // chance = the "100-year" floodplain), exported from FEMA's
-    // National Flood Hazard Layer, simplified, clipped to the WV state
-    // outline, and dissolved with mapshaper
-    // (data/wv_floodplain.geojson, ~2.4 MB, one MultiPolygon).
+    // Each overlay is a pre-built, hosted GeoJSON, clipped to the WV
+    // state outline and slimmed with mapshaper (see data/wv_*.geojson).
+    // They are lazy-loaded the first time their checkbox is switched on,
+    // so users who never open them don't pay the download.
     //
-    // Why hosted (not live FEMA): FEMA's tile service won't draw below
-    // ~1:36k scale and its symbology is too faint over the red
-    // choropleth — so it was invisible at the state overview. A static
-    // vector file renders our OWN bold blue at EVERY zoom, with no
-    // dependence on FEMA's API being up during the workshop. It is
-    // lazy-loaded the first time the layer is switched on so users who
-    // never open it don't pay the download.
+    //   • wv_floodplain.geojson   — FEMA NFHL 100-yr / Special Flood
+    //                               Hazard Area (1% annual chance).
+    //   • wv_repetitive_loss.geojson — FEMA repetitive-loss areas
+    //                               (flooded again and again → where
+    //                               mitigation $ is most justified).
+    //   • wv_buyouts.geojson      — WV mitigated flood parcels
+    //                               (buyouts already done → what's been
+    //                               funded; counter-map the gaps).
+    //   • wv_watersheds.geojson   — HUC-8 watershed boundaries (the unit
+    //                               nature-based solutions are planned in).
     //
-    // To refresh the data: re-run the fetch+mapshaper pipeline against
-    // NFHL layer 28 for the WV bbox and overwrite data/wv_floodplain.geojson.
+    // Why hosted (not live ArcGIS): FEMA/WV services have scale limits,
+    // faint symbology, and uptime risk during a live workshop. Static
+    // vector files render our OWN styling at EVERY zoom, reliably.
     //
-    // Adding another WV layer for a workshop?
-    //   1) add a checkbox in the #wv-layers-group block in index.html,
-    //   2) add its source + layer(s) here,
-    //   3) wire the checkbox the same way as setWVFlood below.
+    // Adding another WV layer? Drop a clipped GeoJSON in data/, add an
+    // entry to WV_OVERLAYS below, and add a matching checkbox + legend
+    // item in index.html (ids: wv-<key>-toggle / wv-<key>-legend).
     // -------------------------------------------------------------
-    var WV_FLOOD_SRC = 'wv-floodplain';
-    var WV_FLOOD_FILL = 'wv-floodplain-fill';
-    var WV_FLOOD_LINE = 'wv-floodplain-line';
-    var WV_FLOOD_URL = 'data/wv_floodplain.geojson';
-
-    map.addSource(WV_FLOOD_SRC, {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] },
-        attribution: 'Flood hazard data: FEMA National Flood Hazard Layer (NFHL)'
-    });
-    map.addLayer({
-        id: WV_FLOOD_FILL,
-        type: 'fill',
-        source: WV_FLOOD_SRC,
-        layout: { visibility: 'none' },
-        paint: { 'fill-color': '#1f6fe5', 'fill-opacity': 0.5 }
-    });
-    map.addLayer({
-        id: WV_FLOOD_LINE,
-        type: 'line',
-        source: WV_FLOOD_SRC,
-        layout: { visibility: 'none' },
-        paint: {
-            'line-color': '#0a3a8c',
-            // Thicker at state zoom so the narrow river corridors stay
-            // visible when zoomed out; finer as you drill into a town.
-            'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.2, 8, 1, 12, 1.2, 15, 1.8],
-            'line-opacity': 0.9
+    var WV_OVERLAYS = [
+        {
+            key: 'floodplain',
+            url: 'data/wv_floodplain.geojson',
+            attribution: 'Flood hazard data: FEMA National Flood Hazard Layer (NFHL)',
+            layers: [
+                { suffix: 'fill', type: 'fill', paint: { 'fill-color': '#1f6fe5', 'fill-opacity': 0.5 } },
+                {
+                    suffix: 'line', type: 'line', paint: {
+                        'line-color': '#0a3a8c',
+                        // Thicker at state zoom so narrow river corridors stay
+                        // visible zoomed out; finer as you drill into a town.
+                        'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.2, 8, 1, 12, 1.2, 15, 1.8],
+                        'line-opacity': 0.9
+                    }
+                }
+            ]
+        },
+        {
+            key: 'reploss',
+            url: 'data/wv_repetitive_loss.geojson',
+            attribution: 'Repetitive Loss Areas: FEMA / WV GIS Technical Center',
+            layers: [
+                { suffix: 'fill', type: 'fill', paint: { 'fill-color': '#8e24aa', 'fill-opacity': 0.55 } },
+                { suffix: 'line', type: 'line', paint: { 'line-color': '#4a148c', 'line-width': 1.3, 'line-opacity': 0.95 } }
+            ]
+        },
+        {
+            key: 'buyouts',
+            url: 'data/wv_buyouts.geojson',
+            attribution: 'Mitigated flood parcels: WV GIS Technical Center',
+            layers: [
+                {
+                    suffix: 'circle', type: 'circle', paint: {
+                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 2, 10, 3.5, 13, 5.5],
+                        'circle-color': '#1b7837',
+                        'circle-opacity': 0.85,
+                        'circle-stroke-color': '#ffffff',
+                        'circle-stroke-width': 0.7
+                    }
+                }
+            ]
+        },
+        {
+            key: 'watersheds',
+            url: 'data/wv_watersheds.geojson',
+            attribution: 'HUC-8 watersheds: USGS / WV GIS Technical Center',
+            layers: [
+                {
+                    suffix: 'line', type: 'line', paint: {
+                        'line-color': '#00695c',
+                        'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1, 9, 1.6, 13, 2.2],
+                        'line-opacity': 0.75,
+                        'line-dasharray': [2, 1.5]
+                    }
+                }
+            ]
         }
+    ];
+
+    // Build sources + (hidden) layers for every overlay up front; data is
+    // fetched lazily on first toggle. layerId = wv-<key>-<suffix>.
+    WV_OVERLAYS.forEach(function (ov) {
+        ov.sourceId = 'wv-' + ov.key;
+        ov.loaded = false;
+        map.addSource(ov.sourceId, {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+            attribution: ov.attribution || ''
+        });
+        ov.layers.forEach(function (l) {
+            map.addLayer({
+                id: 'wv-' + ov.key + '-' + l.suffix,
+                type: l.type,
+                source: ov.sourceId,
+                layout: Object.assign({ visibility: 'none' }, l.layout || {}),
+                paint: l.paint
+            });
+        });
     });
 
-    var wvFloodToggle = document.getElementById('wv-floodplain-toggle');
-    var wvFloodLegend = document.getElementById('wv-flood-legend');
-    var wvFloodHint = document.querySelector('.wv-layer-hint');
-    var wvFloodLoaded = false;           // becomes true once the file is fetched
-
-    // Keep the WV overlays (and county labels) on top of everything,
+    // Keep all WV overlays (and county labels) on top of everything,
     // including the async older-adults dots layer.
     function restackWVTop() {
-        [WV_FLOOD_FILL, WV_FLOOD_LINE].forEach(function (id) {
-            if (map.getLayer(id)) map.moveLayer(id);
+        WV_OVERLAYS.forEach(function (ov) {
+            ov.layers.forEach(function (l) {
+                var id = 'wv-' + ov.key + '-' + l.suffix;
+                if (map.getLayer(id)) map.moveLayer(id);
+            });
         });
-        if (map.getLayer('county-labels')) map.moveLayer('county-labels'); // labels above flood
+        if (map.getLayer('county-labels')) map.moveLayer('county-labels'); // labels above overlays
     }
 
-    // Lazy-load the hosted GeoJSON once, the first time the layer is shown.
-    function ensureFloodData() {
-        if (wvFloodLoaded) return;
-        wvFloodLoaded = true;            // guard against double-fetch on rapid toggling
-        if (wvFloodHint) wvFloodHint.textContent = 'Loading flood zones…';
-        fetch(WV_FLOOD_URL)
+    // Lazy-load an overlay's hosted GeoJSON once, the first time it's shown.
+    function ensureOverlayData(ov) {
+        if (ov.loaded) return;
+        ov.loaded = true;                // guard against double-fetch on rapid toggling
+        fetch(ov.url)
             .then(function (r) { return r.json(); })
             .then(function (geo) {
-                var src = map.getSource(WV_FLOOD_SRC);
+                var src = map.getSource(ov.sourceId);
                 if (src) src.setData(geo);
                 restackWVTop();
-                if (wvFloodHint) wvFloodHint.textContent = '1% annual-chance flood areas, shown statewide.';
             })
             .catch(function (e) {
-                wvFloodLoaded = false;   // allow a retry on next toggle
-                console.error('[wv-flood] failed to load', e);
-                if (wvFloodHint) wvFloodHint.textContent = 'Could not load flood data.';
+                ov.loaded = false;       // allow a retry on next toggle
+                console.error('[wv-overlay] failed to load ' + ov.key, e);
             });
     }
 
-    function setWVFlood(on) {
+    function setOverlay(ov, on) {
         var vis = on ? 'visible' : 'none';
-        if (map.getLayer(WV_FLOOD_FILL)) map.setLayoutProperty(WV_FLOOD_FILL, 'visibility', vis);
-        if (map.getLayer(WV_FLOOD_LINE)) map.setLayoutProperty(WV_FLOOD_LINE, 'visibility', vis);
-        if (wvFloodLegend) wvFloodLegend.style.display = on ? '' : 'none';
-        if (on) { ensureFloodData(); restackWVTop(); }
-    }
-    if (wvFloodToggle) {
-        wvFloodToggle.addEventListener('change', function (e) {
-            setWVFlood(e.target.checked);
+        ov.layers.forEach(function (l) {
+            var id = 'wv-' + ov.key + '-' + l.suffix;
+            if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
+        var legend = document.getElementById('wv-' + ov.key + '-legend');
+        if (legend) legend.style.display = on ? '' : 'none';
+        if (on) { ensureOverlayData(ov); restackWVTop(); }
     }
 
+    // Wire each overlay's checkbox (id: wv-<key>-toggle).
+    WV_OVERLAYS.forEach(function (ov) {
+        var toggle = document.getElementById('wv-' + ov.key + '-toggle');
+        if (toggle) toggle.addEventListener('change', function (e) { setOverlay(ov, e.target.checked); });
+    });
+
+    // "Hide base data layer" checkbox (WV-only): checking it hides the
+    // choropleth so the WV overlays can be read on their own.
+    var wvBaseToggle = document.getElementById('wv-base-toggle');
+    if (wvBaseToggle) {
+        wvBaseToggle.addEventListener('change', function (e) { setBaseDataVisible(!e.target.checked); });
+    }
+
+    // ---- WV overlay hover tooltips -------------------------------------
+    // Each overlay gets a plain-language tooltip so users understand what
+    // they're looking at and the per-feature attributes (community, stream,
+    // watershed code…). Shown in the shared hoverPopup. The county/tract
+    // hover handlers call wvFeatureAt() and defer to these when an overlay
+    // is under the cursor, so tooltips never stack.
+    var esc = function (s) {
+        return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+        });
+    };
+    var WV_TOOLTIPS = {
+        floodplain: function () {
+            return '<div class="hover-county">FEMA 100-yr Floodplain</div>'
+                + '<div class="hover-sub">1% annual-chance flood area (Special Flood Hazard Area). High flood risk — insurance typically required.</div>';
+        },
+        reploss: function (p) {
+            var place = [p.Community, p.County ? p.County + ' County' : ''].filter(Boolean).map(esc).join(', ');
+            return '<div class="hover-county">Repetitive Loss Area</div>'
+                + (place ? '<div class="hover-sub">' + place + '</div>' : '')
+                + (p.Stream_Name ? '<div class="hover-sub">Stream: ' + esc(p.Stream_Name) + '</div>' : '')
+                + '<div class="hover-sub"><i>Flooded repeatedly — a top priority for mitigation funding.</i></div>';
+        },
+        buyouts: function (p) {
+            return '<div class="hover-county">Flood Buyout / Mitigated Parcel</div>'
+                + (p.CID_Name ? '<div class="hover-sub">' + esc(p.CID_Name) + '</div>' : '')
+                + '<div class="hover-sub"><i>Already acquired &amp; removed from the floodplain with mitigation funds.</i></div>';
+        },
+        watersheds: function (p) {
+            return '<div class="hover-county">HUC-8 Watershed</div>'
+                + '<div class="hover-sub">Code: ' + esc(p.HUC || '—') + '</div>'
+                + '<div class="hover-sub"><i>Planning unit for watershed-scale nature-based solutions.</i></div>';
+        }
+    };
+
+    // The hover-target layer for each overlay = its first layer (fill / circle
+    // / line). Returns ids only for overlays currently switched on.
+    function wvVisibleHoverLayers() {
+        var ids = [];
+        WV_OVERLAYS.forEach(function (ov) {
+            var id = 'wv-' + ov.key + '-' + ov.layers[0].suffix;
+            if (map.getLayer(id) && map.getLayoutProperty(id, 'visibility') === 'visible') ids.push(id);
+        });
+        return ids;
+    }
+    // Topmost visible WV overlay feature under a screen point, or null.
+    function wvFeatureAt(point) {
+        var ids = wvVisibleHoverLayers();
+        if (!ids.length) return null;
+        var fs = map.queryRenderedFeatures(point, { layers: ids });
+        return (fs && fs.length) ? fs[0] : null;
+    }
+
+    WV_OVERLAYS.forEach(function (ov) {
+        var hoverId = 'wv-' + ov.key + '-' + ov.layers[0].suffix;
+        map.on('mousemove', hoverId, function (e) {
+            if (popup.isOpen()) { hoverPopup.remove(); return; }
+            if (!e.features || !e.features.length) return;
+            map.getCanvas().style.cursor = 'pointer';
+            var build = WV_TOOLTIPS[ov.key];
+            if (build) hoverPopup.setLngLat(e.lngLat).setHTML(build(e.features[0].properties)).addTo(map);
+        });
+        map.on('mouseleave', hoverId, function () {
+            map.getCanvas().style.cursor = '';
+            hoverPopup.remove();
+        });
+    });
+
     // Public hook for statefilter.js: show the WV-only controls when West
-    // Virginia is selected, and reset its overlays when leaving the state.
+    // Virginia is selected, and reset every overlay when leaving the state.
     window.AtlasWV = {
         onStateChange: function (name) {
             var isWV = (name === 'West Virginia');
@@ -1980,8 +2129,14 @@ map.on('load', function () {
                 el.style.display = isWV ? '' : 'none';
             });
             if (!isWV) {
-                if (wvFloodToggle) wvFloodToggle.checked = false;
-                setWVFlood(false);
+                WV_OVERLAYS.forEach(function (ov) {
+                    var toggle = document.getElementById('wv-' + ov.key + '-toggle');
+                    if (toggle) toggle.checked = false;
+                    setOverlay(ov, false);
+                });
+                // Restore the base choropleth for the national / other-state view.
+                if (wvBaseToggle) wvBaseToggle.checked = false;
+                setBaseDataVisible(true);
             }
         }
     };
@@ -2088,6 +2243,8 @@ map.on('load', function () {
             hoverPopup.remove();
             return;
         }
+        // Defer to a WV overlay tooltip when one is under the cursor.
+        if (typeof wvFeatureAt === 'function' && wvFeatureAt(e.point)) return;
         if (!e.features || !e.features.length) return;
         var t = e.features[0].properties;
         var tractName = t.NAMELSAD || 'Census tract';
