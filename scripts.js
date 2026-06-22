@@ -2120,25 +2120,37 @@ map.on('load', function () {
                 + '<div class="hover-foot">FEMA estimate, not money spent.</div>';
         },
         floodplain: function () {
-            return '<div class="hover-county">FEMA 100-yr Floodplain</div>'
-                + '<div class="hover-sub">1% annual-chance flood area (Special Flood Hazard Area). High flood risk; insurance typically required.</div>';
+            return '<div class="hover-county">FEMA 100-year Floodplain</div>'
+                + '<div class="hover-sub">Land with about a 1% chance of flooding in any year. That is roughly a 1-in-4 chance over a 30-year mortgage.</div>'
+                + '<div class="hover-sub">FEMA’s official high-risk flood zone, where flood insurance is usually required.</div>'
+                + '<div class="hover-foot">Source: FEMA National Flood Hazard Layer.</div>';
         },
         reploss: function (p) {
             var place = [p.Community, p.County ? p.County + ' County' : ''].filter(Boolean).map(esc).join(', ');
-            return '<div class="hover-county">Repetitive Loss Area</div>'
+            return '<div class="hover-county">Repeatedly Flooded Area</div>'
+                + (p.Stream_Name ? '<div class="hover-sub">Along ' + esc(p.Stream_Name) + '</div>' : '')
                 + (place ? '<div class="hover-sub">' + place + '</div>' : '')
-                + (p.Stream_Name ? '<div class="hover-sub">Stream: ' + esc(p.Stream_Name) + '</div>' : '')
-                + '<div class="hover-sub"><i>Flooded repeatedly. A top priority for mitigation funding.</i></div>';
+                + '<div class="hover-sub">Buildings here have filed repeated flood-insurance claims, so this spot floods again and again.</div>'
+                + '<div class="hover-foot">FEMA “Repetitive Loss” data (National Flood Insurance Program).</div>';
         },
         buyouts: function (p) {
-            return '<div class="hover-county">Flood Buyout / Mitigated Parcel</div>'
-                + (p.CID_Name ? '<div class="hover-sub">' + esc(p.CID_Name) + '</div>' : '')
-                + '<div class="hover-sub"><i>Already acquired &amp; removed from the floodplain with mitigation funds.</i></div>';
+            var PROG = { 'FEMA': 'FEMA', 'FEMA?': 'FEMA (likely)', 'Community': 'a local program',
+                'USACE': 'the U.S. Army Corps', 'NRCS': 'USDA NRCS', 'HUD': 'HUD', 'WVDOT': 'WV DOT' };
+            var prog = PROG[p.prog] || p.prog || 'a mitigation program';
+            var comm = esc((p.comm || '').replace(/\*+$/, '').trim());
+            return '<div class="hover-county">Flood Buyout</div>'
+                + (comm ? '<div class="hover-sub">' + comm + '</div>' : '')
+                + '<div class="hover-sub">A flood-prone property bought and cleared, then kept as open space so no one is put back in harm’s way.</div>'
+                + '<div class="hover-sub">Funded by ' + prog + (p.yr ? ', acquired ' + esc(p.yr) : '') + '.</div>'
+                + (p.ncomm ? '<div class="hover-haz-title">One of ' + p.ncomm + ' flood buyouts in this community</div>' : '')
+                + '<div class="hover-foot">Source: WV State Hazard Mitigation Office / FEMA.</div>';
         },
         watersheds: function (p) {
-            return '<div class="hover-county">HUC-8 Watershed</div>'
-                + '<div class="hover-sub">Code: ' + esc(p.HUC || 'n/a') + '</div>'
-                + '<div class="hover-sub"><i>Planning unit for watershed-scale nature-based solutions.</i></div>';
+            var name = esc(p.name || 'This');
+            return '<div class="hover-county">' + name + ' Watershed</div>'
+                + '<div class="hover-sub">All the land here drains to the ' + name + ' river system.</div>'
+                + '<div class="hover-sub">Watersheds are the natural unit for planning flood protection and nature-based solutions.</div>'
+                + '<div class="hover-foot">USGS Watershed Boundary Dataset (HUC-8 ' + esc(p.huc || '') + ').</div>';
         }
     };
 

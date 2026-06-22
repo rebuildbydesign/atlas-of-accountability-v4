@@ -17,11 +17,12 @@ The WV-focused build of the Atlas of Accountability is being extended into a **c
 
 **BUILT (June 2026):** the trilogy is live as toggles in the "West Virginia Layers" panel, alongside the floodplain. scripts.js now uses a generic `WV_OVERLAYS` registry (in the map `load` handler) — each entry = {key, url, layers[]}; sources/layers are created hidden up front and the GeoJSON is lazy-loaded on first toggle. Layer ids: `wv-<key>-<suffix>`; checkbox ids `wv-<key>-toggle`; legend ids `wv-<key>-legend`. Adding a layer = drop a WV-clipped GeoJSON in data/ + a registry entry + a checkbox/legend in index.html.
 
-Hosted data files (all clipped to WV outline via mapshaper):
-- `data/wv_floodplain.geojson` (~2.4MB, blue fill+line)
-- `data/wv_repetitive_loss.geojson` (55 polys, purple) — RepetitiveLossArea layer 2
-- `data/wv_buyouts.geojson` (2862 pts, green dots) — preservedOpenSpaces "Mitigated Flood Parcel" layer 2
-- `data/wv_watersheds.geojson` (33 polys, dashed teal lines) — HUC8 layer 1
+Hosted data files (all clipped to WV outline via mapshaper). Each WV overlay has a plain-language hover tooltip (WV_TOOLTIPS in scripts.js); NO em dashes (user style preference). Panel/legend titles renamed for non-data audience:
+- `data/wv_floodplain.geojson` (~2.4MB, blue) — title "FEMA 100-year Floodplain". No per-feature attrs; tooltip explains 1%/yr ≈ 1-in-4 over 30yr.
+- `data/wv_repetitive_loss.geojson` (55 polys, purple) — title "Repeatedly Flooded Areas" (FEMA NFIP Repetitive Loss). Fields Name/County/Community/Stream_Name.
+- `data/wv_buyouts.geojson` (2826 pts, green) — title "Flood Buyouts". Fields comm/prog/yr/ncomm (ncomm = buyouts per community, computed). Source: WV State Hazard Mitigation Office/FEMA; all hazard=Flood; prog values FEMA/Community/USACE/NRCS/HUD/WVDOT.
+- `data/wv_watersheds.geojson` (33 polys, dashed teal) — title "Watersheds". Fields name (CAT_NAME)/huc (HUC-8). USGS WBD.
+- `data/wv_nri_flood.geojson` (404KB) — title "FEMA National Risk Index", YlOrRd choropleth; fields county/frisk/frate/feal/sovi/cres/haz (haz = top-4 hazards "Label:dollars|..."). Tooltip frames EAL as projected loss "if nothing changes", not money spent.
 
 **Added FEMA NRI (June 2026):** colleague dropped raw NRI in data/NRI_Counties_WV.geojson (7.8MB, 467 fields) and data/NRI_CensusTract_WV.geojson (47MB) — both LARGE and not directly loaded by the app. Built `data/wv_nri_flood.geojson` (396KB, 55 counties, trimmed fields county/frisk/frate/feal/sovi/cres) = Inland Flooding Risk Index choropleth, added as WV overlay key `nriflood` (first in registry so it's the bottom choropleth; YlOrRd 5-class, WV-relative quintile breaks 54.1/64.9/76.5/85.0; pair with Hide base data layer). National NRI ratings barely vary within WV — use continuous score. NRI SoVI ≈ existing CDC SVI (skipped). Community Resilience = good optional next add (new dimension). restackWVTop now hoists county-borders above overlays too.
 
