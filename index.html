@@ -102,6 +102,17 @@
         </div>
         <!-- WV overlay keys — each shown only while its overlay is toggled
              on (managed by scripts.js setOverlay; ids: wv-<key>-legend). -->
+        <div class="legend-item legend-item-block" id="wv-nriflood-legend" style="display:none;">
+            <span><b>Flood Risk (FEMA NRI)</b><br><span class="legend-mode-name">Expected loss × vulnerability ÷ resilience</span></span>
+            <div class="nri-ramp">
+                <span style="background:#ffffb2"></span>
+                <span style="background:#fecc5c"></span>
+                <span style="background:#fd8d3c"></span>
+                <span style="background:#f03b20"></span>
+                <span style="background:#bd0026"></span>
+            </div>
+            <div class="nri-ramp-labels"><span>Lower risk</span><span>Higher risk</span></div>
+        </div>
         <div class="legend-item" id="wv-floodplain-legend" style="display:none;">
             <div class="legend-swatch-flood"></div>
             <span><b>FEMA 100-yr Floodplain</b><br><span class="legend-mode-name">1% annual chance (SFHA)</span></span>
@@ -216,6 +227,10 @@
                         <span>Hide base data layer</span>
                     </label>
                     <div class="wv-layer-hint">Check to view the WV layers on their own.</div>
+                    <label class="control-option">
+                        <input type="checkbox" id="wv-nriflood-toggle">
+                        <span>Flood Risk (FEMA NRI)</span>
+                    </label>
                     <label class="control-option">
                         <input type="checkbox" id="wv-floodplain-toggle">
                         <span>FEMA 100-yr Floodplain</span>

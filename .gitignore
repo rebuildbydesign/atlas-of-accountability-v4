@@ -1,1 +1,7 @@
 .DS_Store
+
+# Raw FEMA NRI source data (large, not loaded by the app).
+# The app uses the trimmed data/wv_nri_flood.geojson instead.
+# Kept locally for reference/regeneration; not deployed to GitHub Pages.
+data/NRI_CensusTract_WV.geojson
+data/NRI_Counties_WV.geojson

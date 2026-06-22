@@ -1924,6 +1924,30 @@ map.on('load', function () {
     // -------------------------------------------------------------
     var WV_OVERLAYS = [
         {
+            // Flood RISK choropleth (forward-looking) from FEMA's National Risk
+            // Index — Inland Flooding Risk Index score, which already blends
+            // expected annual loss × social vulnerability ÷ community resilience.
+            // First in the list so it renders UNDERNEATH the line/point overlays.
+            // Pair with "Hide base data layer" for a clean risk view. Color
+            // breaks are WV-relative quintiles (national ratings barely vary in WV).
+            key: 'nriflood',
+            url: 'data/wv_nri_flood.geojson',
+            attribution: 'Flood risk: FEMA National Risk Index (NRI)',
+            layers: [
+                {
+                    suffix: 'fill', type: 'fill', paint: {
+                        'fill-color': ['step', ['get', 'frisk'],
+                            '#ffffb2',
+                            54.1, '#fecc5c',
+                            64.9, '#fd8d3c',
+                            76.5, '#f03b20',
+                            85.0, '#bd0026'],
+                        'fill-opacity': 0.85
+                    }
+                }
+            ]
+        },
+        {
             key: 'floodplain',
             url: 'data/wv_floodplain.geojson',
             attribution: 'Flood hazard data: FEMA National Flood Hazard Layer (NFHL)',
@@ -2012,7 +2036,10 @@ map.on('load', function () {
                 if (map.getLayer(id)) map.moveLayer(id);
             });
         });
-        if (map.getLayer('county-labels')) map.moveLayer('county-labels'); // labels above overlays
+        // Keep black county boundaries + labels ON TOP of the overlays so
+        // counties stay readable even under the NRI risk choropleth.
+        if (map.getLayer('county-borders')) map.moveLayer('county-borders');
+        if (map.getLayer('county-labels')) map.moveLayer('county-labels');
     }
 
     // Lazy-load an overlay's hosted GeoJSON once, the first time it's shown.
@@ -2068,6 +2095,13 @@ map.on('load', function () {
         });
     };
     var WV_TOOLTIPS = {
+        nriflood: function (p) {
+            var eal = p.feal ? '$' + (p.feal / 1e6).toFixed(1) + 'M / yr' : '—';
+            return '<div class="hover-county">' + esc(p.county) + ' County</div>'
+                + '<div class="hover-summary">Flood Risk (FEMA NRI): ' + esc(p.frate || '—') + '</div>'
+                + '<div class="hover-sub">Expected annual flood loss: ' + eal + '</div>'
+                + '<div class="hover-sub">Social vulnerability: ' + esc(p.sovi || '—') + ' · Community resilience: ' + esc(p.cres || '—') + '</div>';
+        },
         floodplain: function () {
             return '<div class="hover-county">FEMA 100-yr Floodplain</div>'
                 + '<div class="hover-sub">1% annual-chance flood area (Special Flood Hazard Area). High flood risk — insurance typically required.</div>';

@@ -945,6 +945,29 @@ a:active {
     flex: 0 0 auto;
 }
 
+/* NRI flood-risk graduated legend (a small ramp instead of one swatch) */
+.legend-item-block {
+    display: block;
+}
+
+.nri-ramp {
+    display: flex;
+    margin-top: 6px;
+}
+
+.nri-ramp span {
+    flex: 1 1 0;
+    height: 12px;
+}
+
+.nri-ramp-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #555;
+    margin-top: 2px;
+}
+
 /* CONGRESS BOUNDARY LEGEND */
 .legend-item {
     display: flex;
