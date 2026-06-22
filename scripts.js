@@ -209,6 +209,10 @@ map.on('load', function () {
         });
     }
 
+    // Start with the "How to use this map" panel hidden so the homepage
+    // loads minimally — users open it on demand via the top-left (?) icon.
+    infoPanel.style.display = 'none';
+
     // Ensure that the info-icon event listener is added after the map has fully loaded
     document.getElementById('info-icon').addEventListener('click', function () {
         if (infoPanel.style.display === 'none' || infoPanel.style.display === '') {

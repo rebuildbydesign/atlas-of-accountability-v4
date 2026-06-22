@@ -348,6 +348,48 @@
     });
   }
 
+  // ----- Initial view: deep-link to a state, or minimal homepage ------------
+  // Shareable per-state URL, e.g. ?state=West%20Virginia (case-insensitive,
+  // any state name). It focuses that state with the WV layers ready, but
+  // leaves the fact sheet CLOSED until the user clicks "Fact sheet" — handy
+  // for sending workshop attendees straight to the WV map. With no ?state,
+  // the homepage loads minimally with the filter bar collapsed to its
+  // reopener button.
+  function readStateParam() {
+    var m = /[?&]state=([^&]+)/i.exec(window.location.search);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')).trim() : '';
+  }
+  function resolveStateName(raw) {
+    if (!raw) return '';
+    var lc = raw.toLowerCase();
+    for (var i = 0; i < STATE_NAMES.length; i++) {
+      if (STATE_NAMES[i].toLowerCase() === lc) return STATE_NAMES[i];
+    }
+    return '';
+  }
+  function applyInitialState() {
+    var name = resolveStateName(readStateParam());
+    if (!name) {
+      // Minimal homepage: collapse the filter bar to its reopener.
+      document.getElementById('sf-controls').classList.add('sf-collapsed');
+      document.getElementById('sf-reopen').classList.add('show');
+      return;
+    }
+    // Focus the linked state once the map's data layers exist (the filters
+    // are no-ops before scripts.js adds them on map load).
+    function focusDeepLink() {
+      document.getElementById('sf-state').value = name;
+      document.getElementById('sf-compare').value = '';
+      focusState(name);
+      renderFactsheet(name, '');
+      // Intentionally do NOT open #sf-panel — the fact sheet stays closed
+      // until the user clicks "Fact sheet". The filter bar stays visible so
+      // that button is reachable.
+    }
+    if (map.getLayer('atlas-fema-layer')) focusDeepLink();
+    else map.on('load', focusDeepLink);
+  }
+
   // ----- Boot ----------------------------------------------------------------
   // Build the state index from the same geojson Mapbox loads (browser caches
   // it, so this fetch is effectively free), then wire the UI.
@@ -358,6 +400,7 @@
       populateDropdowns();
       wireUI();
       renderFactsheet('', '');
+      applyInitialState();
     })
     .catch(function (e) {
       console.error('[statefilter] failed to load data', e);
