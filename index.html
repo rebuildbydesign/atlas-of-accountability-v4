@@ -103,7 +103,7 @@
         <!-- WV overlay keys — each shown only while its overlay is toggled
              on (managed by scripts.js setOverlay; ids: wv-<key>-legend). -->
         <div class="legend-item legend-item-block" id="wv-nriflood-legend" style="display:none;">
-            <span><b>Flood Risk (FEMA NRI)</b><br><span class="legend-mode-name">Expected loss × vulnerability ÷ resilience</span></span>
+            <span><b>FEMA National Risk Index</b><br><span class="legend-mode-name">Flood risk score</span></span>
             <div class="nri-ramp">
                 <span style="background:#ffffb2"></span>
                 <span style="background:#fecc5c"></span>
@@ -111,7 +111,7 @@
                 <span style="background:#f03b20"></span>
                 <span style="background:#bd0026"></span>
             </div>
-            <div class="nri-ramp-labels"><span>Lower risk</span><span>Higher risk</span></div>
+            <div class="nri-ramp-labels"><span>Lower</span><span>Higher</span></div>
         </div>
         <div class="legend-item" id="wv-floodplain-legend" style="display:none;">
             <div class="legend-swatch-flood"></div>
@@ -229,7 +229,7 @@
                     <div class="wv-layer-hint">Check to view the WV layers on their own.</div>
                     <label class="control-option">
                         <input type="checkbox" id="wv-nriflood-toggle">
-                        <span>Flood Risk (FEMA NRI)</span>
+                        <span>FEMA National Risk Index</span>
                     </label>
                     <label class="control-option">
                         <input type="checkbox" id="wv-floodplain-toggle">

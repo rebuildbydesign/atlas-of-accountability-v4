@@ -945,6 +945,42 @@ a:active {
     flex: 0 0 auto;
 }
 
+/* NRI tooltip — per-hazard expected-loss breakdown + framing footer */
+.hover-haz-title {
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+}
+
+.hover-haz {
+    margin-top: 2px;
+}
+
+.hover-haz-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.hover-haz-row span:last-child {
+    color: #bd0026;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.hover-foot {
+    margin-top: 6px;
+    padding-top: 5px;
+    border-top: 1px solid #e2e2e2;
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: #666;
+    font-style: italic;
+}
+
 /* NRI flood-risk graduated legend (a small ramp instead of one swatch) */
 .legend-item-block {
     display: block;

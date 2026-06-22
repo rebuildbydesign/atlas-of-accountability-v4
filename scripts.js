@@ -2096,22 +2096,39 @@ map.on('load', function () {
     };
     var WV_TOOLTIPS = {
         nriflood: function (p) {
-            var eal = p.feal ? '$' + (p.feal / 1e6).toFixed(1) + 'M / yr' : '—';
+            var money = function (n) {
+                n = +n || 0;
+                if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+                if (n >= 1e3) return '$' + Math.round(n / 1e3) + 'K';
+                return '$' + Math.round(n);
+            };
+            // Per-hazard breakdown comes in as "Label:dollars|Label:dollars".
+            var rows = '';
+            (p.haz || '').split('|').forEach(function (pair) {
+                if (!pair) return;
+                var i = pair.lastIndexOf(':');
+                if (i < 0) return;
+                rows += '<div class="hover-haz-row"><span>' + esc(pair.slice(0, i)) + '</span>'
+                      + '<span>' + money(pair.slice(i + 1)) + '</span></div>';
+            });
             return '<div class="hover-county">' + esc(p.county) + ' County</div>'
-                + '<div class="hover-summary">Flood Risk (FEMA NRI): ' + esc(p.frate || '—') + '</div>'
-                + '<div class="hover-sub">Expected annual flood loss: ' + eal + '</div>'
-                + '<div class="hover-sub">Social vulnerability: ' + esc(p.sovi || '—') + ' · Community resilience: ' + esc(p.cres || '—') + '</div>';
+                + '<div class="hover-summary">Flood risk: ' + esc(p.frate || 'n/a') + '</div>'
+                + (rows ? '<div class="hover-haz-title">What it could lose each year, if nothing changes</div>'
+                        + '<div class="hover-haz">' + rows + '</div>' : '')
+                + '<div class="hover-sub">Social vulnerability: ' + esc(p.sovi || 'n/a') + '</div>'
+                + '<div class="hover-sub">Community resilience: ' + esc(p.cres || 'n/a') + '</div>'
+                + '<div class="hover-foot">FEMA estimate, not money spent.</div>';
         },
         floodplain: function () {
             return '<div class="hover-county">FEMA 100-yr Floodplain</div>'
-                + '<div class="hover-sub">1% annual-chance flood area (Special Flood Hazard Area). High flood risk — insurance typically required.</div>';
+                + '<div class="hover-sub">1% annual-chance flood area (Special Flood Hazard Area). High flood risk; insurance typically required.</div>';
         },
         reploss: function (p) {
             var place = [p.Community, p.County ? p.County + ' County' : ''].filter(Boolean).map(esc).join(', ');
             return '<div class="hover-county">Repetitive Loss Area</div>'
                 + (place ? '<div class="hover-sub">' + place + '</div>' : '')
                 + (p.Stream_Name ? '<div class="hover-sub">Stream: ' + esc(p.Stream_Name) + '</div>' : '')
-                + '<div class="hover-sub"><i>Flooded repeatedly — a top priority for mitigation funding.</i></div>';
+                + '<div class="hover-sub"><i>Flooded repeatedly. A top priority for mitigation funding.</i></div>';
         },
         buyouts: function (p) {
             return '<div class="hover-county">Flood Buyout / Mitigated Parcel</div>'
@@ -2120,7 +2137,7 @@ map.on('load', function () {
         },
         watersheds: function (p) {
             return '<div class="hover-county">HUC-8 Watershed</div>'
-                + '<div class="hover-sub">Code: ' + esc(p.HUC || '—') + '</div>'
+                + '<div class="hover-sub">Code: ' + esc(p.HUC || 'n/a') + '</div>'
                 + '<div class="hover-sub"><i>Planning unit for watershed-scale nature-based solutions.</i></div>';
         }
     };
